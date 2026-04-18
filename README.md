@@ -1,11 +1,11 @@
 # Job Description Grabber
 
-A Tampermonkey userscript that injects a floating action panel into job listing pages. Extract job data and send it to your clipboard, save as a TXT file, or POST directly to a Coda database.
+A userscript (Tampermonkey, Violentmonkey, etc.) that injects a floating action panel into job listing pages. Extract job data and send it to your clipboard, save as a TXT file, or POST directly to a Coda database.
 
 ## Install
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser
-2. Open the [raw script URL](../../raw/main/Job%20Description%20Grabber.user.js) — Tampermonkey will intercept and prompt you to install
+2. Open the [raw script URL](https://raw.githubusercontent.com/mrbrownjeremy/job-description-grabber/main/Job%20Description%20Grabber.user.js) — your userscript manager will intercept and prompt you to install
 
 ## Features
 
@@ -23,4 +23,4 @@ Works on LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Workable, Workday, iCIM
 
 ## Coda Integration
 
-Requires a Coda API token. Set it once via **Settings → Coda API Token** — it's stored locally in Tampermonkey and never sent anywhere except the Coda API.
+Requires a Coda API token. Set it once via **Settings → Coda API Token** — it's stored locally in your userscript manager and never sent anywhere except the Coda API.
