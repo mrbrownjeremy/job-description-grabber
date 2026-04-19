@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.4.0
+// @version      3.5.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -292,6 +292,7 @@
     }
     .jdg-multisel-option:hover { background: #f0f0ff; }
     .jdg-multisel-option.selected { color: #4a4adf; font-weight: 600; }
+    .jdg-multisel-option.focused { background: #e8e8ff; }
 
     .jdg-desc-preview {
       background: #f5f5f5;
@@ -1554,10 +1555,10 @@
         ${field('location',     'Location',      'input', data.location)}
         ${selectField('remotePolicy', 'Remote Policy', REMOTE_OPTIONS, data.remotePolicy)}
         ${selectField('ftPtCT', 'FT/PT/C/T',    FTPT_OPTIONS, data.ftPtCT)}
-        ${field('shiftHours',   'Shift / Hours', 'input', data.shiftHours)}
+        ${field('hrsWk',        'Hrs/Wk',        'input', data.hrsWk, 'number')}
         ${field('salaryRange',  'Salary Range',  'input', data.salaryRange)}
         ${selectField('compType', 'Comp Type',   COMPTYPE_OPTIONS, data.compType)}
-        ${field('hrsWk',        'Hrs/Wk',        'input', data.hrsWk, 'number')}
+        ${field('shiftHours',   'Shift',         'input', data.shiftHours)}
         <div class="jdg-field" id="jdg-industries-wrap">
           <label>Industry(s)</label>
           <div id="jdg-multisel" class="jdg-multisel" tabindex="0"></div>
@@ -1743,6 +1744,8 @@
     container.innerHTML = '';
     container.style.cursor = 'default';
 
+    let focusedIdx = -1;
+
     const input = document.createElement('input');
     input.type = 'text';
     input.placeholder = '';
@@ -1771,6 +1774,7 @@
 
     function showDropdown(filter = '') {
       document.querySelectorAll('.jdg-multisel-dropdown').forEach(d => d.remove());
+      focusedIdx = -1;
       const filtered = allOptions.filter(o =>
         o.toLowerCase().includes(filter.toLowerCase())
       );
@@ -1802,6 +1806,38 @@
 
       document.body.appendChild(dropdown);
     }
+
+    function moveFocus(delta) {
+      const dropdown = document.querySelector('.jdg-multisel-dropdown');
+      if (!dropdown) { showDropdown(input.value); return; }
+      const items = dropdown.querySelectorAll('.jdg-multisel-option');
+      if (!items.length) return;
+      if (focusedIdx >= 0) items[focusedIdx].classList.remove('focused');
+      focusedIdx = focusedIdx === -1
+        ? (delta > 0 ? 0 : items.length - 1)
+        : Math.max(0, Math.min(items.length - 1, focusedIdx + delta));
+      items[focusedIdx].classList.add('focused');
+      items[focusedIdx].scrollIntoView({ block: 'nearest' });
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        moveFocus(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        moveFocus(-1);
+      } else if (e.key === 'Enter') {
+        const dropdown = document.querySelector('.jdg-multisel-dropdown');
+        if (dropdown && focusedIdx >= 0) {
+          e.preventDefault();
+          dropdown.querySelectorAll('.jdg-multisel-option')[focusedIdx]
+            ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        }
+      } else if (e.key === 'Escape') {
+        document.querySelectorAll('.jdg-multisel-dropdown').forEach(d => d.remove());
+      }
+    });
 
     input.addEventListener('focus', () => showDropdown(input.value));
     input.addEventListener('input', () => showDropdown(input.value));
