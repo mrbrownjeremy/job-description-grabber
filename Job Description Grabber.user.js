@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
-// @namespace    https://github.com/jeremybrown
-// @version      3.2.0
+// @namespace    https://github.com/mrbrownjeremy
+// @version      3.4.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -12,7 +12,12 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
 // @connect      coda.io
+// @tm-id        0dd9fae7-4f77-4a03-9202-ed5eb107137c
 // ==/UserScript==
+
+// TODO
+// - add compatibility with Google Sheets and Notion
+// - add import/export for different lists
 
 (function () {
   'use strict';
@@ -48,7 +53,7 @@
 
   const DEFAULT_INDUSTRIES = [
     'Accounting','Arts & Culture','Creative & Design','Education','Finance',
-    'Government','Healthcare','Hospitality','Legal','Manufacturing',
+    'Games','Government','Healthcare','Hospitality','Legal','Manufacturing',
     'Marketing','Media & Communications','Nonprofit','Other',
     'Real Estate','Retail','Technology'
   ];
@@ -144,12 +149,12 @@
     .jdg-pill {
       background: #1a1a2e;
       color: #fff;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.6);
       border-radius: 20px;
       padding: 5px 8px;
       font-size: 15px;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 0 6px rgba(255,255,255,0.15);
       transition: background 0.15s, transform 0.1s;
       line-height: 1;
       position: relative;
@@ -458,12 +463,16 @@
   function saveIndustries(arr) { GM_setValue('industries', JSON.stringify(arr)); }
   function getDomains() {
     const stored = GM_getValue('domainList', null);
-    return stored ? JSON.parse(stored) : [...DEFAULT_DOMAINS];
+    if (!stored) return [...DEFAULT_DOMAINS];
+    const arr = JSON.parse(stored);
+    return arr.length > 0 ? arr : [...DEFAULT_DOMAINS];
   }
   function saveDomains(arr) { GM_setValue('domainList', JSON.stringify(arr)); }
   function getPatterns() {
     const stored = GM_getValue('patternList', null);
-    return stored ? JSON.parse(stored) : [...DEFAULT_PATTERNS];
+    if (!stored) return [...DEFAULT_PATTERNS];
+    const arr = JSON.parse(stored);
+    return arr.length > 0 ? arr : [...DEFAULT_PATTERNS];
   }
   function savePatterns(arr) { GM_setValue('patternList', JSON.stringify(arr)); }
   function getPosition() { return GM_getValue('panelPosition', 'top-right'); }
@@ -591,7 +600,7 @@
           .find(el => clean(el.textContent).toLowerCase() === 'description');
         if (descHeading) {
           const richText = descHeading.parentElement?.querySelector('.rich-text-container');
-          if (richText) data.description = clean(richText.innerText || richText.textContent || '');
+          if (richText) data.description = stripHtml(richText.innerHTML);
         }
       }
     }
@@ -627,9 +636,10 @@
         '.jd-info',
         '[data-ph-at-id="jobdescription-text"]',
         '.rich-text-container',
+        '.entry-content',
       ].join(','));
       if (descEl) {
-        data.description = (descEl.innerText || descEl.textContent || '').trim();
+        data.description = stripHtml(descEl.innerHTML);
       }
     }
 
@@ -763,7 +773,7 @@
     if (lfShift) data.shiftHours = lfShift;
 
     if (!data.remotePolicy) {
-      const raw = lf(['work arrangement', 'remote', 'work type', 'location type', 'workplace type']);
+      const raw = lf(['role type', 'work arrangement', 'remote', 'work type', 'location type', 'workplace type']);
       if (raw) data.remotePolicy = inferRemotePolicy(raw) || data.remotePolicy;
     }
 
@@ -788,7 +798,7 @@
         const salMatch =
           bodyText.match(new RegExp(`\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|hour|wk|week|mo|month))?\\s+to\\s+\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
           bodyText.match(/between\s+\$[\d,]+(?:\.\d+)?\s+and\s+\$[\d,]+(?:\.\d+)?/i) ||
-          bodyText.match(new RegExp(`\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?\\s*[-–]\\s*\\$?[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
+          bodyText.match(new RegExp(`\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?\\s*[-–—]\\s*\\$?[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
           bodyText.match(/\$[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?/i);
         if (salMatch) data.salaryRange = salMatch[0].trim();
       }
@@ -890,19 +900,26 @@
       /\bthis\s+role\s+is\s+(not\s+)?eligible\s+for\s+remote\b/,
     ];
 
+    // Neutralise negated "fully remote" phrases before signal matching so they
+    // don't trigger the fullyRemote list — e.g. "not open to fully remote status"
+    const neutralised = t
+      .replace(/\bnot\s+(open|available)\s+to\s+(fully\s+)?remote\b/g, '')
+      .replace(/\bnot\s+(a\s+)?(fully\s+)?remote\s+(position|role|job)\b/g, '')
+      .replace(/\bposition\s+is\s+not\s+(open\s+to\s+)?(fully\s+)?remote\b/g, '');
+
     // Negative context — "not remote", "not eligible for remote"
     const negRemote = [
       /\bnot\s+(eligible\s+for\s+)?remote\b/,
       /\bno\s+remote\b/,
     ];
 
-    for (const re of negRemote)   { if (re.test(t)) return 'On-Site'; }
-    for (const re of fullyRemote) { if (re.test(t)) return 'Remote'; }
-    for (const re of hybridSignals){ if (re.test(t)) return 'Hybrid'; }
-    for (const re of onSiteSignals){ if (re.test(t)) return 'On-Site'; }
+    for (const re of negRemote)    { if (re.test(t))           return 'On-Site'; }
+    for (const re of fullyRemote)  { if (re.test(neutralised)) return 'Remote'; }
+    for (const re of hybridSignals){ if (re.test(neutralised)) return 'Hybrid'; }
+    for (const re of onSiteSignals){ if (re.test(t))           return 'On-Site'; }
 
     // Loose "remote" mention with no stronger signal → Hybrid (most common ambiguous case)
-    if (/\bremote\b/.test(t)) return 'Hybrid';
+    if (/\bremote\b/.test(neutralised)) return 'Hybrid';
 
     return '';
   }
@@ -1105,6 +1122,44 @@
           /\bindustrial engineer/, /\bcnc\b/, /\bfabrication\b/,
         ],
       },
+      'Games': {
+        threshold: 2,
+        patterns: [
+          // Publishers & studios — user-specified
+          /\bnintendo\b/, /\bcapcom\b/, /\bsquare[\s-]enix\b/, /\bkonami\b/,
+          /\bdevolver( digital)?\b/, /\bmega cat\b/, /\bubisoft\b/,
+          /\belectronic arts\b/, /\bea (games|sports|mobile)\b/,
+          /\bunity technologies\b/,  /\bvalve\b/,
+          // Major western publishers & studios
+          /\bactivision\b/, /\bblizzard\b/, /\btake.?two\b/, /\b2k games\b/,
+          /\brockstar games\b/, /\bbethesda\b/, /\bid software\b/,
+          /\bcd projekt\b/, /\bparadox interactive\b/, /\bgearbox\b/,
+          /\brespawn\b/, /\bobsidian( entertainment)?\b/, /\bdouble fine\b/,
+          /\binsomniac games\b/, /\bnaughty dog\b/, /\btreyarch\b/,
+          /\binfinity ward\b/, /\bharmonix\b/, /\bschell games\b/,
+          /\biron galaxy\b/, /\bpeople can fly\b/, /\b11 bit studios\b/,
+          // Japanese publishers & studios
+          /\bbandai[\s-]namco\b/, /\bsega\b/, /\batlus\b/, /\bfromsoftware\b/,
+          /\bncsoft\b/, /\bhoyo(verse)?\b/, /\bmihoyo\b/,
+          // Online / platform
+          /\briot games\b/, /\bepic games\b/, /\bbungie\b/,
+          // Notable indie publishers & studios
+          /\bannapurna interactive\b/, /\braw fury\b/, /\bteam17\b/,
+          /\bchucklefish\b/, /\btinybuild\b/, /\bprivate division\b/,
+          /\bdevolver\b/, /\blarian( studios)?\b/, /\bsupergiant\b/,
+          /\bklei( entertainment)?\b/, /\byacht club games\b/,
+          /\bteam cherry\b/, /\binnersloth\b/, /\bhopoo\b/,
+          /\bfocus (home|entertainment)\b/, /\bnacon\b/, /\bthq nordic\b/,
+          /\bwarhorse studios\b/, /\bfatshark\b/,
+          // Generic game industry terms
+          /\bvideo\s*game(s)?\b/, /\bgame\s*develop(er|ment)\b/,
+          /\bgame\s*design(er)?\b/, /\blevel\s*design(er)?\b/,
+          /\bgame\s*(studio|studios|publisher)\b/, /\bgame\s*engine\b/,
+          /\bgameplay\b/, /\besports?\b/, /\bindie\s*game(s|dev)?\b/,
+          /\bunreal\s*engine\b/, /\bgodot\b/, /\bgame\s*(qa|tester|testing)\b/,
+          /\bnarrative\s*design(er)?\b/, /\bgames\b/,
+        ],
+      },
       'Real Estate': {
         threshold: 2,
         patterns: [
@@ -1197,15 +1252,28 @@
   function stripHtml(html) {
     if (!html || typeof html !== 'string') return '';
     try {
-      // Use DOMParser — works reliably in Tampermonkey sandbox unlike detached div
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      // Insert newlines before block elements
-      doc.querySelectorAll('p,br,li,div,h1,h2,h3,h4,h5,h6').forEach(el => {
+      // Convert ordered lists to "1. " numbered items
+      doc.querySelectorAll('ol').forEach(ol => {
+        let n = 1;
+        ol.querySelectorAll(':scope > li').forEach(li => {
+          li.insertAdjacentText('beforebegin', '\n');
+          li.insertAdjacentText('afterbegin', `${n++}. `);
+        });
+      });
+      // Convert unordered lists to "• " bullet items
+      doc.querySelectorAll('ul').forEach(ul => {
+        ul.querySelectorAll(':scope > li').forEach(li => {
+          li.insertAdjacentText('beforebegin', '\n');
+          li.insertAdjacentText('afterbegin', '• ');
+        });
+      });
+      // Insert newlines before remaining block elements
+      doc.querySelectorAll('p,br,div,h1,h2,h3,h4,h5,h6').forEach(el => {
         el.insertAdjacentText('beforebegin', '\n');
       });
       return doc.body.textContent.replace(/\n{3,}/g, '\n\n').trim();
     } catch (e) {
-      // Last resort: naive tag strip
       return html.replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim();
     }
   }
@@ -1232,6 +1300,16 @@
     document.querySelectorAll('[class*="label"],[class*="Label"],[class*="field-name"],[class*="fieldName"]').forEach(el => {
       const sibling = el.nextElementSibling;
       if (sibling) set(el.textContent, sibling.textContent);
+    });
+
+    // Pattern 3b: <h3>Label</h3><span>Value</span> siblings (Nintendo/Phenom-style)
+    document.querySelectorAll('h3').forEach(h3 => {
+      const key = h3.textContent.trim();
+      if (!key || key.length > 40) return;
+      const next = h3.nextElementSibling;
+      if (next && ['span', 'p', 'div'].includes(next.tagName.toLowerCase())) {
+        set(key, next.textContent);
+      }
     });
 
     // Pattern 4: data-* attribute labels (some React-based pages)
@@ -1367,8 +1445,9 @@
       if (e.altKey)   parts.push('alt');
       if (e.shiftKey) parts.push('shift');
       const key = e.key.toLowerCase();
-      if (!['meta','control','alt','shift'].includes(key)) parts.push(key);
-      if (parts.length > 1) {
+      const isModifier = ['meta','control','alt','shift'].includes(key);
+      if (!isModifier) parts.push(key);
+      if (!isModifier && parts.length > 1) {
         const combo = parts.join('+');
         inputEl.value = combo;
         inputEl.classList.remove('recording');
@@ -1424,6 +1503,7 @@
   // ─── Coda Modal ───────────────────────────────────────────────────────────────
   // Persist last extracted data so reopening restores state
   let _lastExtractedData = null;
+  let _lastModalState    = null; // preserves user edits across accidental dismissals
 
   // For SPA pages, attempt a delayed re-extraction and refresh modal if data improved
   function tryDelayedExtraction(onImproved) {
@@ -1444,9 +1524,10 @@
     // If modal already open, just focus it
     if (document.getElementById('jdg-overlay')) return;
 
-    // Use cached data if available, otherwise extract fresh
-    const data = _lastExtractedData || extractJobData();
-    _lastExtractedData = data;
+    // Prefer saved modal edits, then cached extraction, then fresh extraction
+    const usedSavedState = !!_lastModalState;
+    const data = _lastModalState || _lastExtractedData || extractJobData();
+    if (!usedSavedState) _lastExtractedData = data;
 
     const industries = getIndustries();
 
@@ -1500,9 +1581,10 @@
         </div>
         ${selectField('connectionStrength', 'Connection Strength', CONNSTR_OPTIONS, data.connectionStrength)}
 
-        <div class="jdg-group"><span class="jdg-group-label">Description</span><span class="jdg-group-line"></span></div>
+        <div class="jdg-group"><span class="jdg-group-label">Description</span><span class="jdg-group-line"></span><button id="jdg-desc-edit-btn" style="margin-left:8px;padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;">Edit</button></div>
         <div class="jdg-field full">
           <div class="jdg-desc-preview" id="jdg-desc-preview" style="max-height:1.6em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(data.description.slice(0, 200))}</div>
+          <textarea id="jdg-f-description" style="display:none;width:100%;min-height:180px;font-size:12px;font-family:inherit;border:1px solid #ccc;border-radius:6px;padding:8px 10px;box-sizing:border-box;resize:vertical;">${escHtml(data.description)}</textarea>
         </div>
 
       </div>
@@ -1551,21 +1633,46 @@
       modal
     );
 
+    // ── Preserve edits on dismiss ──
+    const saveState = () => {
+      _lastModalState = { ...gatherModalData(modal, data.description, selectedIndustries) };
+    };
+    overlay._jdgSave = saveState;
+
     // ── Interest slider ──
     const slider = modal.querySelector('#jdg-interest');
     const sliderVal = modal.querySelector('#jdg-interest-val');
     slider.addEventListener('input', () => { sliderVal.textContent = slider.value; });
 
+    // ── Description edit toggle ──
+    modal.querySelector('#jdg-desc-edit-btn').addEventListener('click', () => {
+      const preview = modal.querySelector('#jdg-desc-preview');
+      const textarea = modal.querySelector('#jdg-f-description');
+      const btn = modal.querySelector('#jdg-desc-edit-btn');
+      if (textarea.style.display === 'none') {
+        preview.style.display = 'none';
+        textarea.style.display = '';
+        btn.textContent = 'Done';
+        btn.style.cssText = 'margin-left:8px;padding:1px 8px;font-size:11px;border:1px solid #4a4adf;border-radius:4px;background:#4a4adf;cursor:pointer;color:#fff;flex-shrink:0;';
+      } else {
+        preview.style.display = '';
+        textarea.style.display = 'none';
+        btn.textContent = 'Edit';
+        btn.style.cssText = 'margin-left:8px;padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;';
+      }
+    });
+
     // ── Refresh button — re-extract fresh data ──
     modal.querySelector('#jdg-modal-refresh').addEventListener('click', () => {
       _lastExtractedData = null;
+      _lastModalState = null;
       overlay.remove();
       doShowCodaModal();
     });
 
     // ── SPA delayed re-extraction — fires after React/etc renders ──
-    // Only runs if this was a fresh extraction (not a cached reopen)
-    if (!_lastExtractedData || _lastExtractedData === data) {
+    // Skip if restoring saved edits or re-using cached data
+    if (!usedSavedState && (!_lastExtractedData || _lastExtractedData === data)) {
       tryDelayedExtraction((fresh) => {
         // Silently update fields that were blank and now have data
         const update = (id, val) => {
@@ -1587,8 +1694,8 @@
       });
     }
 
-    // ── Close — preserve data so reopening restores it ──
-    const closeModal = () => overlay.remove();
+    // ── Close — save edits so reopening restores them ──
+    const closeModal = () => { saveState(); overlay.remove(); };
     modal.querySelector('#jdg-modal-close').addEventListener('click', closeModal);
     modal.querySelector('#jdg-cancel').addEventListener('click', closeModal);
     // No overlay click-to-close — modal is now freely draggable over the page
@@ -1727,7 +1834,7 @@
       interest:          parseInt(modal.querySelector('#jdg-interest')?.value || '3'),
       connectionStrength: v('connectionStrength'),
       shiftHours:         v('shiftHours'),
-      description:       fullDescription,
+      description:       modal.querySelector('#jdg-f-description')?.value ?? fullDescription,
     };
   }
 
@@ -1777,6 +1884,7 @@
           statusEl.className = 'jdg-status-msg success';
           statusEl.textContent = '✓ Added to Coda!';
           flashPill(2, '✅');
+          _lastModalState = null;
           setTimeout(() => overlay.remove(), 1200);
         } else {
           statusEl.className = 'jdg-status-msg error';
@@ -2022,6 +2130,7 @@
 
     // Industry list
     const listEl = modal.querySelector('#jdg-ind-list');
+    listEl.addEventListener('click', (e) => {
       if (e.target.classList.contains('jdg-btn-remove')) {
         const idx = parseInt(e.target.dataset.idx);
         industries.splice(idx, 1);
@@ -2090,13 +2199,32 @@
     document.addEventListener('DOMContentLoaded', init);
   }
 
-  // Re-check panel exists after SPA navigation
+  // Re-check panel exists after SPA navigation (debounced to avoid firing on every DOM mutation)
+  let _navTimer = null;
   const navObserver = new MutationObserver(() => {
-    if (!document.getElementById('jdg-panel')) {
-      _lastExtractedData = null;
-      if (pageMatchesAllowlist()) buildPanel();
-    }
+    if (document.getElementById('jdg-panel')) return;
+    clearTimeout(_navTimer);
+    _navTimer = setTimeout(() => {
+      if (!document.getElementById('jdg-panel')) {
+        _lastExtractedData = null;
+        _lastModalState = null;
+        if (pageMatchesAllowlist()) buildPanel();
+      }
+    }, 300);
   });
   navObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+  // Dismiss any open JDG modal on Escape (save Coda modal edits first)
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const overlay = document.getElementById('jdg-overlay') ||
+                    document.getElementById('jdg-site-overlay') ||
+                    document.getElementById('jdg-settings-overlay');
+    if (overlay) {
+      e.stopPropagation();
+      if (typeof overlay._jdgSave === 'function') overlay._jdgSave();
+      overlay.remove();
+    }
+  });
 
 })();
