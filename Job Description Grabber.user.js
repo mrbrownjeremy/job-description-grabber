@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.7.5
+// @version      3.8.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -1666,7 +1666,7 @@
       <div class="jdg-modal-footer">
         <span class="jdg-status-msg" id="jdg-status"></span>
         <button class="jdg-btn jdg-btn-cancel" id="jdg-cancel">Cancel</button>
-        <button class="jdg-btn jdg-btn-send" id="jdg-send">Send to Coda</button>
+        <button class="jdg-btn jdg-btn-send" id="jdg-send">Send to Coda <span style="opacity:0.7;font-size:0.85em;">⌘⏎</span></button>
       </div>
     `;
 
@@ -1775,10 +1775,26 @@
     // No overlay click-to-close — modal is now freely draggable over the page
 
     // ── Send ──
-    modal.querySelector('#jdg-send').addEventListener('click', () => {
+    const doSend = () => {
       const payload = gatherModalData(modal, data.description, selectedIndustries);
       sendToCoda(payload, modal.querySelector('#jdg-status'), modal.querySelector('#jdg-send'), overlay);
-    });
+    };
+    modal.querySelector('#jdg-send').addEventListener('click', doSend);
+
+    // ⌘Enter submits when the modal is open; cleaned up whenever overlay leaves the DOM
+    const cmdEnterHandler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'Enter' || e.key === 'Return')) {
+        e.preventDefault();
+        doSend();
+      }
+    };
+    document.addEventListener('keydown', cmdEnterHandler);
+    new MutationObserver((_, obs) => {
+      if (!document.getElementById('jdg-overlay')) {
+        document.removeEventListener('keydown', cmdEnterHandler);
+        obs.disconnect();
+      }
+    }).observe(document.body, { childList: true });
   }
 
   function field(id, label, tag, value = '', type = 'text') {
