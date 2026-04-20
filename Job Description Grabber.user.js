@@ -161,8 +161,14 @@
     }
     .jdg-pill:hover { background: #2d2d5e; transform: scale(1.08); }
     .jdg-pill:active { transform: scale(0.96); }
-    .jdg-grab-indicator { cursor: default; opacity: 0.75; }
-    .jdg-grab-indicator:hover { background: #1a1a2e; transform: none; }
+    .jdg-grab-indicator {
+      font-size: 15px; line-height: 1;
+      display: flex; align-items: center;
+      opacity: 0.85; cursor: default;
+      position: relative;
+    }
+    .jdg-grab-indicator .jdg-tooltip { display: none; }
+    .jdg-grab-indicator:hover .jdg-tooltip { display: block; }
     .jdg-pill .jdg-tooltip {
       display: none;
       position: absolute;
@@ -500,7 +506,7 @@
     if (!getGrabbedUrls().has(location.href)) return;
     const indicator = document.createElement('span');
     indicator.id = 'jdg-grab-indicator';
-    indicator.className = 'jdg-pill jdg-grab-indicator';
+    indicator.className = 'jdg-grab-indicator';
     indicator.innerHTML = '✅<span class="jdg-tooltip">Already grabbed</span>';
     const isLeft = getPosition().includes('left');
     if (isLeft) {
