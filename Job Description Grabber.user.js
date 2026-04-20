@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.8.2
+// @version      3.8.3
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -981,6 +981,8 @@
     // On-site signals
     const onSiteSignals = [
       /\bon[\s-]?site\s+(only|required|position|role)\b/,
+      /\bin[\s-]?office\s+(only|required|position|role|job)\b/,
+      /\bthis\s+is\s+an?\s+in[\s-]?office\s+(position|role|job)\b/,
       /\bin[\s-]?person\s+(only|required|position|role)\b/,
       /\b(must|required to|expected to)\s+(be\s+)?(work|report|come)\s+(in|on[\s-]?site|to\s+the\s+office)\b/,
       /\bno\s+remote\s*(work|option)\b/,
