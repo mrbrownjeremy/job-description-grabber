@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.7.0
+// @version      3.7.1
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -897,10 +897,11 @@
     const department = lf(['department', 'dept', 'team', 'division', 'function']);
     data.industries = inferIndustries(data.position, data.employer, data.description, department);
 
-    // Merge domain-pinned industries
-    const host = location.hostname.replace(/^www\./, '');
+    // Merge domain-pinned industries — match against full URL so path-based
+    // patterns like "/figma/" work for ATS-hosted jobs (e.g. greenhouse.io/figma)
+    const fullUrl = location.href.toLowerCase();
     const pinned = getDomainIndustries()
-      .filter(e => host.includes(e.url))
+      .filter(e => fullUrl.includes(e.url.toLowerCase()))
       .map(e => e.industry);
     if (pinned.length) data.industries = [...new Set([...data.industries, ...pinned])];
 
