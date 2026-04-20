@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.6.0
+// @version      3.6.1
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -920,6 +920,10 @@
       /\bblended\s+(work|office)\b/,
       /\bin[\s-]?office\b.*\bremote\b/s,
       /\bremote\b.*\bin[\s-]?office\b/s,
+      /\bor\s+remotely\b/,
+      /\bremotely\s+or\b/,
+      /\bcan\s+be\s+(?:held|done|performed|completed|based)(?:\s+\w+)?\s+remotely\b/,
+      /\b(?:hubs?|offices?|locations?)\s+or\s+remotely\b/,
     ];
 
     // On-site signals
@@ -949,8 +953,8 @@
     for (const re of hybridSignals){ if (re.test(neutralised)) return 'Hybrid'; }
     for (const re of onSiteSignals){ if (re.test(t))           return 'On-Site'; }
 
-    // Loose "remote" mention with no stronger signal → Hybrid (most common ambiguous case)
-    if (/\bremote\b/.test(neutralised)) return 'Hybrid';
+    // Loose "remote"/"remotely" mention with no stronger signal → Hybrid (most common ambiguous case)
+    if (/\bremote(ly)?\b/.test(neutralised)) return 'Hybrid';
 
     return '';
   }
