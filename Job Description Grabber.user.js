@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.7.4
+// @version      3.7.5
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -443,9 +443,11 @@
       letter-spacing: 0.05em; color: #888; white-space: nowrap; min-width: 64px;
     }
     .jdg-site-quick-input {
-      flex: 1; border: 1px solid #ddd; border-radius: 6px;
-      padding: 5px 8px; font-size: 12px !important; font-family: monospace;
-      background: #fafafa; color: #1a1a1a; outline: none;
+      flex: 1; border: 1px solid #ddd !important; border-radius: 6px !important;
+      padding: 5px 8px !important; font-size: 12px !important;
+      font-family: monospace !important; line-height: normal !important;
+      background: #fafafa !important; color: #1a1a1a !important; outline: none !important;
+      box-sizing: border-box !important;
     }
     .jdg-site-quick-input:focus { border-color: #4a4adf; background: #fff; }
     .jdg-site-quick-select {
