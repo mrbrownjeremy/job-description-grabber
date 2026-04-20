@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.8.3
+// @version      3.8.4
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -1000,6 +1000,8 @@
     const negRemote = [
       /\bnot\s+(eligible\s+for\s+)?remote\b/,
       /\bno\s+remote\b/,
+      // "not a remote/hybrid role", "not a remote or hybrid position"
+      /\bnot\s+a\s+(remote|hybrid)([\s\/]+(remote|hybrid))?\s+(position|role|job)\b/,
       // "Remote or hybrid arrangements are not available/offered/permitted"
       /\b(remote|hybrid)(\s+or\s+(hybrid|remote))?\s+(?:\w+\s+){0,3}(?:are\s+)?not\s+(?:available|offered|permitted|supported|an?\s+option)\b/,
     ];
