@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.7.1
+// @version      3.7.2
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -2041,11 +2041,15 @@
           <input type="text" id="jdg-pattern-quick" placeholder="/path/ or subdomain." class="jdg-site-quick-input" title="Matches anywhere in the full URL. Examples: /careers/, jobs., linkedin.com/jobs">
           <button class="jdg-btn-sm jdg-btn-add" id="jdg-pattern-quick-add">Add</button>
         </div>
-        <div class="jdg-site-header-row" style="margin-top:6px;">
-          <span class="jdg-site-header-label">+ URL:Ind</span>
-          <input type="text" id="jdg-di-url-quick" placeholder="e.g. figma.com" class="jdg-site-quick-input">
-          <select id="jdg-di-ind-quick" class="jdg-site-quick-select">${indOptions}</select>
-          <button class="jdg-btn-sm jdg-btn-add" id="jdg-di-quick-add">Add</button>
+        <div class="jdg-site-header-row" style="margin-top:6px;align-items:flex-start;">
+          <span class="jdg-site-header-label" style="padding-top:5px;">+ URL→Ind</span>
+          <div style="display:flex;flex-direction:column;flex:1;gap:4px;">
+            <input type="text" id="jdg-di-url-quick" placeholder="e.g. /figma/ or figma.com" class="jdg-site-quick-input" title="Matched against the full URL — use /path/ style to catch company pages on shared ATS sites like greenhouse.io">
+            <div style="display:flex;gap:6px;">
+              <select id="jdg-di-ind-quick" class="jdg-site-quick-select">${indOptions}</select>
+              <button class="jdg-btn-sm jdg-btn-add" id="jdg-di-quick-add">Add</button>
+            </div>
+          </div>
         </div>
       </div>
       <div id="jdg-modal-body">
