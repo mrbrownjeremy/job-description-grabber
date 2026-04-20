@@ -8,9 +8,9 @@ A Tampermonkey/Greasemonkey userscript that injects a floating action panel into
 
 ## Deployment
 
-There is no build step. Files are installed directly into Tampermonkey via the browser extension. To update the script, edit the `.js` file and paste it into Tampermonkey (or use the file:// URL method if your browser supports it). Version is tracked in the `@version` header and the filename.
+There is no build step. Files are installed directly into Tampermonkey via the browser extension. To update the script, edit the `.js` file and paste it into Tampermonkey (or use the file:// URL method if your browser supports it). Version is tracked only in the `@version` header — the filename does not change.
 
-Versioned files (v1.9.1, v2.9.4, v2.9.5) represent the script's history — only the highest version is the active one.
+After every change: bump `@version`, commit, and push to GitHub.
 
 ## Architecture
 
@@ -39,7 +39,7 @@ The entire script is a single IIFE in one `.js` file following the userscript pa
 1. Add `@match *://*.newsite.com/*` to the userscript header
 2. Add `'newsite.com': 'Channel Name'` to `CHANNEL_MAP`
 3. If generic extraction fails, add a site-specific block in `extractJobData()` (see the Gusto block as a pattern)
-4. Bump `@version` in the header and rename the file to match
+4. Bump `@version` in the header
 
 ## GM API usage
 
