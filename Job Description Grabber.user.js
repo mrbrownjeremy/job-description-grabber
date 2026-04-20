@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.7.2
+// @version      3.7.3
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -2044,7 +2044,10 @@
         <div class="jdg-site-header-row" style="margin-top:6px;align-items:flex-start;">
           <span class="jdg-site-header-label" style="padding-top:5px;">+ URL→Ind</span>
           <div style="display:flex;flex-direction:column;flex:1;gap:4px;">
-            <input type="text" id="jdg-di-url-quick" placeholder="e.g. /figma/ or figma.com" class="jdg-site-quick-input" title="Matched against the full URL — use /path/ style to catch company pages on shared ATS sites like greenhouse.io">
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="jdg-di-url-quick" placeholder="e.g. /figma/ or figma.com" class="jdg-site-quick-input" title="Matched against the full URL — use /path/ style to catch company pages on shared ATS sites like greenhouse.io">
+              <button class="jdg-btn-sm jdg-btn-add" style="visibility:hidden;pointer-events:none;" aria-hidden="true">Add</button>
+            </div>
             <div style="display:flex;gap:6px;">
               <select id="jdg-di-ind-quick" class="jdg-site-quick-select">${indOptions}</select>
               <button class="jdg-btn-sm jdg-btn-add" id="jdg-di-quick-add">Add</button>
