@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.6.1
+// @version      3.7.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -448,6 +448,15 @@
       background: #fafafa; color: #1a1a1a; outline: none;
     }
     .jdg-site-quick-input:focus { border-color: #4a4adf; background: #fff; }
+    .jdg-site-quick-select {
+      flex: 1; border: 1px solid #ddd; border-radius: 6px;
+      padding: 5px 8px; font-size: 12px; background: #fafafa;
+      color: #1a1a1a; outline: none; cursor: pointer;
+    }
+    .jdg-site-quick-select:focus { border-color: #4a4adf; background: #fff; }
+    .jdg-di-item-url { font-family: monospace; font-size: 11px; color: #555; }
+    .jdg-di-item-sep { font-size: 11px; color: #bbb; margin: 0 2px; }
+    .jdg-di-item-ind { font-size: 12px; color: #1a1a1a; flex: 1; }
 
     .jdg-group {
       grid-column: 1 / -1;
@@ -484,6 +493,11 @@
     return arr.length > 0 ? arr : [...DEFAULT_PATTERNS];
   }
   function savePatterns(arr) { GM_setValue('patternList', JSON.stringify(arr)); }
+  function getDomainIndustries() {
+    try { return JSON.parse(GM_getValue('domainIndustries', '[]')); }
+    catch { return []; }
+  }
+  function saveDomainIndustries(arr) { GM_setValue('domainIndustries', JSON.stringify(arr)); }
   function getPosition() { return GM_getValue('panelPosition', 'top-right'); }
   function getShortcut() { return GM_getValue('shortcut', ''); }
   function getToken() { return GM_getValue('codaToken', '86235ca7-568d-48d4-9ee9-2cf4787859b4'); }
@@ -882,6 +896,13 @@
     // Industry inference — include department label in corpus for better signal
     const department = lf(['department', 'dept', 'team', 'division', 'function']);
     data.industries = inferIndustries(data.position, data.employer, data.description, department);
+
+    // Merge domain-pinned industries
+    const host = location.hostname.replace(/^www\./, '');
+    const pinned = getDomainIndustries()
+      .filter(e => host.includes(e.url))
+      .map(e => e.industry);
+    if (pinned.length) data.industries = [...new Set([...data.industries, ...pinned])];
 
     // Comp Type inference — check labeled fields first, then description
     const lfComp = lf(['compensation', 'comp type', 'pay type', 'salary type']);
@@ -1998,11 +2019,13 @@
     modal.id = 'jdg-modal';
     modal.style.cssText = 'position:fixed;top:60px;right:24px;pointer-events:all;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;cursor:default;';
 
-    const domains  = getDomains();
-    const patterns = getPatterns();
-
-    // Suggest current hostname as default domain
+    const domains       = getDomains();
+    const patterns      = getPatterns();
+    const domainInds    = getDomainIndustries();
+    const industries    = getIndustries();
     const suggestedDomain = location.hostname.replace(/^www\./, '');
+
+    const indOptions = industries.map(i => `<option value="${escHtml(i)}">${escHtml(i)}</option>`).join('');
 
     modal.innerHTML = `
       <button class="jdg-close-btn" id="jdg-site-close" style="pointer-events:all;z-index:1;">✕</button>
@@ -2017,19 +2040,46 @@
           <input type="text" id="jdg-pattern-quick" placeholder="/path/ or subdomain." class="jdg-site-quick-input" title="Matches anywhere in the full URL. Examples: /careers/, jobs., linkedin.com/jobs">
           <button class="jdg-btn-sm jdg-btn-add" id="jdg-pattern-quick-add">Add</button>
         </div>
+        <div class="jdg-site-header-row" style="margin-top:6px;">
+          <span class="jdg-site-header-label">+ URL:Ind</span>
+          <input type="text" id="jdg-di-url-quick" placeholder="e.g. figma.com" class="jdg-site-quick-input">
+          <select id="jdg-di-ind-quick" class="jdg-site-quick-select">${indOptions}</select>
+          <button class="jdg-btn-sm jdg-btn-add" id="jdg-di-quick-add">Add</button>
+        </div>
       </div>
       <div id="jdg-modal-body">
         <div class="jdg-subsection">
-          <h4>Domains</h4>
-          <ul class="jdg-industry-list" id="jdg-site-domain-list">
-            ${domains.map((d, i) => matchItem(d, i, 'domain')).join('')}
-          </ul>
+          <div class="jdg-collapsible-header" id="jdg-domains-toggle">
+            <h4 style="margin:0;">Domains</h4>
+            <span class="jdg-collapsible-arrow" id="jdg-domains-arrow">▼</span>
+          </div>
+          <div class="jdg-collapsible-body collapsed" id="jdg-domains-body">
+            <ul class="jdg-industry-list" id="jdg-site-domain-list">
+              ${domains.map((d, i) => matchItem(d, i, 'domain')).join('')}
+            </ul>
+          </div>
         </div>
-        <div class="jdg-subsection" style="margin-top:14px;">
-          <h4>URL Patterns</h4>
-          <ul class="jdg-industry-list" id="jdg-site-pattern-list">
-            ${patterns.map((p, i) => matchItem(p, i, 'pattern')).join('')}
-          </ul>
+        <div class="jdg-subsection">
+          <div class="jdg-collapsible-header" id="jdg-patterns-toggle">
+            <h4 style="margin:0;">URL Patterns</h4>
+            <span class="jdg-collapsible-arrow" id="jdg-patterns-arrow">▼</span>
+          </div>
+          <div class="jdg-collapsible-body collapsed" id="jdg-patterns-body">
+            <ul class="jdg-industry-list" id="jdg-site-pattern-list">
+              ${patterns.map((p, i) => matchItem(p, i, 'pattern')).join('')}
+            </ul>
+          </div>
+        </div>
+        <div class="jdg-subsection">
+          <div class="jdg-collapsible-header" id="jdg-di-toggle">
+            <h4 style="margin:0;">URL → Industry</h4>
+            <span class="jdg-collapsible-arrow" id="jdg-di-arrow">▼</span>
+          </div>
+          <div class="jdg-collapsible-body collapsed" id="jdg-di-body">
+            <ul class="jdg-industry-list" id="jdg-site-di-list">
+              ${domainInds.map((e, i) => domainIndustryItem(e, i)).join('')}
+            </ul>
+          </div>
         </div>
       </div>
     `;
@@ -2038,6 +2088,16 @@
     document.body.appendChild(overlay);
 
     document.getElementById('jdg-site-close').addEventListener('click', () => overlay.remove());
+
+    // Collapsible toggles
+    [['jdg-domains-toggle', 'jdg-domains-body', 'jdg-domains-arrow'],
+     ['jdg-patterns-toggle', 'jdg-patterns-body', 'jdg-patterns-arrow'],
+     ['jdg-di-toggle', 'jdg-di-body', 'jdg-di-arrow']].forEach(([tog, bod, arr]) => {
+      modal.querySelector(`#${tog}`).addEventListener('click', () => {
+        modal.querySelector(`#${bod}`).classList.toggle('collapsed');
+        modal.querySelector(`#${arr}`).classList.toggle('open');
+      });
+    });
 
     // Quick-add domain
     const domainListEl = modal.querySelector('#jdg-site-domain-list');
@@ -2071,6 +2131,25 @@
       flashSiteMsg(modal, `✓ "${val}" added to patterns`);
     });
 
+    // Quick-add URL→Industry
+    const diListEl = modal.querySelector('#jdg-site-di-list');
+    modal.querySelector('#jdg-di-quick-add').addEventListener('click', () => {
+      const urlInput = modal.querySelector('#jdg-di-url-quick');
+      const indSel   = modal.querySelector('#jdg-di-ind-quick');
+      const url = urlInput.value.trim();
+      const industry = indSel.value;
+      if (!url || !industry) { urlInput.select(); return; }
+      if (domainInds.some(e => e.url === url && e.industry === industry)) { urlInput.select(); return; }
+      domainInds.push({ url, industry });
+      saveDomainIndustries(domainInds);
+      const li = document.createElement('li');
+      li.className = 'jdg-industry-item';
+      li.innerHTML = domainIndustryItem({ url, industry }, domainInds.length - 1);
+      diListEl.appendChild(li);
+      urlInput.value = '';
+      flashSiteMsg(modal, `✓ "${url}" → "${industry}" added`);
+    });
+
     // Remove from domain list
     domainListEl.addEventListener('click', (e) => {
       if (e.target.classList.contains('jdg-btn-remove')) {
@@ -2092,6 +2171,26 @@
         patternListEl.querySelectorAll('.jdg-btn-remove').forEach((btn, i) => { btn.dataset.idx = i; });
       }
     });
+
+    // Remove from URL→Industry list
+    diListEl.addEventListener('click', (e) => {
+      if (e.target.classList.contains('jdg-btn-remove')) {
+        const idx = parseInt(e.target.dataset.idx);
+        domainInds.splice(idx, 1);
+        saveDomainIndustries(domainInds);
+        e.target.closest('li').remove();
+        diListEl.querySelectorAll('.jdg-btn-remove').forEach((btn, i) => { btn.dataset.idx = i; });
+      }
+    });
+  }
+
+  function domainIndustryItem(entry, idx) {
+    return `<li class="jdg-industry-item">
+      <span class="jdg-di-item-url">${escHtml(entry.url)}</span>
+      <span class="jdg-di-item-sep">→</span>
+      <span class="jdg-di-item-ind">${escHtml(entry.industry)}</span>
+      <button class="jdg-btn-remove" data-idx="${idx}" title="Remove">✕</button>
+    </li>`;
   }
 
   function flashSiteMsg(modal, msg) {
