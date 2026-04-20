@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.8.4
+// @version      3.9.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -989,22 +989,18 @@
       /\bthis\s+role\s+is\s+(not\s+)?eligible\s+for\s+remote\b/,
     ];
 
-    // Neutralise negated "fully remote" phrases before signal matching so they
-    // don't trigger the fullyRemote list — e.g. "not open to fully remote status"
-    const neutralised = t
-      .replace(/\bnot\s+(open|available)\s+to\s+(fully\s+)?remote\b/g, '')
-      .replace(/\bnot\s+(a\s+)?(fully\s+)?remote\s+(position|role|job)\b/g, '')
-      .replace(/\bposition\s+is\s+not\s+(open\s+to\s+)?(fully\s+)?remote\b/g, '');
+    // Strip sentences that negate remote/hybrid — handles the broad class of
+    // "not a remote role", "hybrid not available", "no remote work", etc.
+    // Safeguard: keep sentences that also contain a strong affirmative so we
+    // don't over-strip unusual phrasings like "not your average remote job".
+    const negationRe     = /\b(not|no|never|isn'?t|are?n'?t|doesn'?t|don'?t|won'?t|without|non-)\b/;
+    const remHybridRe    = /\b(remote|hybrid|work\s+from\s+home|wfh)\b/;
+    const strongAffirmRe = /\b(fully\s+remote|100%\s*remote|remote[\s-]only)\b/;
 
-    // Negative context — "not remote", "not eligible for remote"
-    const negRemote = [
-      /\bnot\s+(eligible\s+for\s+)?remote\b/,
-      /\bno\s+remote\b/,
-      // "not a remote/hybrid role", "not a remote or hybrid position"
-      /\bnot\s+a\s+(remote|hybrid)([\s\/]+(remote|hybrid))?\s+(position|role|job)\b/,
-      // "Remote or hybrid arrangements are not available/offered/permitted"
-      /\b(remote|hybrid)(\s+or\s+(hybrid|remote))?\s+(?:\w+\s+){0,3}(?:are\s+)?not\s+(?:available|offered|permitted|supported|an?\s+option)\b/,
-    ];
+    const neutralised = t
+      .split(/(?<=[.!?])\s+|[\r\n]+/)
+      .map(s => (negationRe.test(s) && remHybridRe.test(s) && !strongAffirmRe.test(s)) ? '' : s)
+      .join(' ');
 
     // Strong "fully on-site" signals — checked before hybrid to avoid false positives
     const fullyOnSite = [
@@ -1014,7 +1010,6 @@
       /\bthis\s+(is\s+a\s+)?(?:fully\s+)?on[\s-]?site\s+(position|role|job)\b/,
     ];
 
-    for (const re of negRemote)    { if (re.test(t))           return 'On-Site'; }
     for (const re of fullyOnSite)  { if (re.test(t))           return 'On-Site'; }
     for (const re of fullyRemote)  { if (re.test(neutralised)) return 'Remote'; }
     for (const re of hybridSignals){ if (re.test(neutralised)) return 'Hybrid'; }
