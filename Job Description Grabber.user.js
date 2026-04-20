@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.5.0
+// @version      3.6.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -161,6 +161,8 @@
     }
     .jdg-pill:hover { background: #2d2d5e; transform: scale(1.08); }
     .jdg-pill:active { transform: scale(0.96); }
+    .jdg-grab-indicator { cursor: default; opacity: 0.75; }
+    .jdg-grab-indicator:hover { background: #1a1a2e; transform: none; }
     .jdg-pill .jdg-tooltip {
       display: none;
       position: absolute;
@@ -479,6 +481,34 @@
   function getPosition() { return GM_getValue('panelPosition', 'top-right'); }
   function getShortcut() { return GM_getValue('shortcut', ''); }
   function getToken() { return GM_getValue('codaToken', '86235ca7-568d-48d4-9ee9-2cf4787859b4'); }
+  function getGrabbedUrls() {
+    try { return new Set(JSON.parse(GM_getValue('grabbedUrls', '[]'))); }
+    catch { return new Set(); }
+  }
+  function markUrlGrabbed() {
+    const urls = getGrabbedUrls();
+    urls.add(location.href);
+    const arr = [...urls].slice(-1000);
+    GM_setValue('grabbedUrls', JSON.stringify(arr));
+    updateGrabIndicator();
+  }
+  function updateGrabIndicator() {
+    const panel = document.getElementById('jdg-panel');
+    if (!panel) return;
+    const existing = document.getElementById('jdg-grab-indicator');
+    if (existing) existing.remove();
+    if (!getGrabbedUrls().has(location.href)) return;
+    const indicator = document.createElement('span');
+    indicator.id = 'jdg-grab-indicator';
+    indicator.className = 'jdg-pill jdg-grab-indicator';
+    indicator.innerHTML = '✅<span class="jdg-tooltip">Already grabbed</span>';
+    const isLeft = getPosition().includes('left');
+    if (isLeft) {
+      panel.appendChild(indicator);
+    } else {
+      panel.insertBefore(indicator, panel.firstChild);
+    }
+  }
 
   // ─── URL matching ─────────────────────────────────────────────────────────────
   function pageMatchesAllowlist() {
@@ -1396,7 +1426,10 @@
       { emoji: '⚙️', label: 'Settings',           action: doShowSettings },
     ];
 
-    buttons.forEach(({ emoji, label, action }) => {
+    const isLeft = pos.includes('left');
+    const orderedButtons = isLeft ? [...buttons].reverse() : buttons;
+
+    orderedButtons.forEach(({ emoji, label, action }) => {
       const btn = document.createElement('button');
       btn.className = 'jdg-pill';
       btn.innerHTML = `${emoji}<span class="jdg-tooltip">${label}</span>`;
@@ -1405,6 +1438,7 @@
     });
 
     document.body.appendChild(panel);
+    updateGrabIndicator();
     registerShortcut();
   }
 
@@ -1467,6 +1501,7 @@
     const text = formatAsText(data);
     navigator.clipboard.writeText(text).then(() => {
       flashPill(0, '✅');
+      markUrlGrabbed();
     }).catch(() => {
       const ta = document.createElement('textarea');
       ta.value = text;
@@ -1475,6 +1510,7 @@
       document.execCommand('copy');
       ta.remove();
       flashPill(0, '✅');
+      markUrlGrabbed();
     });
   }
 
@@ -1491,14 +1527,17 @@
     a.click();
     URL.revokeObjectURL(url);
     flashPill(1, '✅');
+    markUrlGrabbed();
   }
 
-  function flashPill(index, symbol) {
-    const pills = document.querySelectorAll('.jdg-pill');
-    if (!pills[index]) return;
-    const orig = pills[index].childNodes[0].textContent;
-    pills[index].childNodes[0].textContent = symbol;
-    setTimeout(() => { pills[index].childNodes[0].textContent = orig; }, 1500);
+  function flashPill(logicalIndex, symbol) {
+    const pills = [...document.querySelectorAll('.jdg-pill:not(.jdg-grab-indicator)')];
+    const isLeft = getPosition().includes('left');
+    const actualIndex = isLeft ? (pills.length - 1 - logicalIndex) : logicalIndex;
+    if (!pills[actualIndex]) return;
+    const orig = pills[actualIndex].childNodes[0].textContent;
+    pills[actualIndex].childNodes[0].textContent = symbol;
+    setTimeout(() => { pills[actualIndex].childNodes[0].textContent = orig; }, 1500);
   }
 
   // ─── Coda Modal ───────────────────────────────────────────────────────────────
@@ -1920,6 +1959,7 @@
           statusEl.className = 'jdg-status-msg success';
           statusEl.textContent = '✓ Added to Coda!';
           flashPill(2, '✅');
+          markUrlGrabbed();
           _lastModalState = null;
           setTimeout(() => overlay.remove(), 1200);
         } else {
