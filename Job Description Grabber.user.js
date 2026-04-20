@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.8.0
+// @version      3.8.1
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -976,9 +976,20 @@
     const negRemote = [
       /\bnot\s+(eligible\s+for\s+)?remote\b/,
       /\bno\s+remote\b/,
+      // "Remote or hybrid arrangements are not available/offered/permitted"
+      /\b(remote|hybrid)(\s+or\s+(hybrid|remote))?\s+(?:\w+\s+){0,3}(?:are\s+)?not\s+(?:available|offered|permitted|supported|an?\s+option)\b/,
+    ];
+
+    // Strong "fully on-site" signals — checked before hybrid to avoid false positives
+    const fullyOnSite = [
+      /\bfully\s+on[\s-]?site\b/,
+      /\b100%\s*on[\s-]?site\b/,
+      /\bon[\s-]?site[\s-]only\b/,
+      /\bthis\s+(is\s+a\s+)?(?:fully\s+)?on[\s-]?site\s+(position|role|job)\b/,
     ];
 
     for (const re of negRemote)    { if (re.test(t))           return 'On-Site'; }
+    for (const re of fullyOnSite)  { if (re.test(t))           return 'On-Site'; }
     for (const re of fullyRemote)  { if (re.test(neutralised)) return 'Remote'; }
     for (const re of hybridSignals){ if (re.test(neutralised)) return 'Hybrid'; }
     for (const re of onSiteSignals){ if (re.test(t))           return 'On-Site'; }
