@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.8.1
+// @version      3.8.2
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -655,6 +655,28 @@
           const richText = descHeading.parentElement?.querySelector('.rich-text-container');
           if (richText) data.description = stripHtml(richText.innerHTML);
         }
+      }
+    }
+
+    // ── Comeet-specific extraction ──
+    if (location.hostname.includes('comeet.com')) {
+      const titleEl = document.querySelector('[data-qa="positionTitle"]');
+      if (titleEl) {
+        // First span is the real title; second (ng-hide) contains " @ CompanyName"
+        const spans = [...titleEl.querySelectorAll('span')];
+        if (spans.length >= 1) data.position = clean(spans[0].textContent);
+        if (!data.employer && spans.length >= 2) {
+          const m = clean(spans[1].textContent).match(/^@\s*(.+)/);
+          if (m) data.employer = m[1].trim();
+        }
+      }
+      if (!data.location) {
+        const locEl = document.querySelector('[data-qa="headerLocation"]');
+        if (locEl) data.location = clean(locEl.textContent).replace(/,?\s*US\s*$/i, '').trim();
+      }
+      if (!data.ftPtCT) {
+        const etEl = document.querySelector('[data-qa="headerEmploymentType"]');
+        if (etEl) data.ftPtCT = mapEmploymentType(clean(etEl.textContent)) || data.ftPtCT;
       }
     }
 
