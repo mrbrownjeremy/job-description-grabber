@@ -10,7 +10,7 @@ A Tampermonkey/Greasemonkey userscript that injects a floating action panel into
 
 There is no build step. Files are installed directly into Tampermonkey via the browser extension. To update the script, edit the `.js` file and paste it into Tampermonkey (or use the file:// URL method if your browser supports it). Version is tracked only in the `@version` header — the filename does not change.
 
-After every change: bump `@version`, commit, and push to GitHub.
+After every change: bump `@version`, commit to `main`, and push to GitHub. If the session started in a git worktree (a side branch), merge it back to `main` before pushing — changes must land on `main` so the user can access the updated file directly.
 
 ## Architecture
 
