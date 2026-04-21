@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.11.6
+// @version      3.12.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2YxNzMyNDt9LmNscy0ye2ZpbGw6IzQyNDZkMTt9LmNscy0ze2ZpbGw6I2IzZmZlMzt9LmNscy0zLC5jbHMtNHtzdHJva2U6I2IzZmZlMztzdHJva2Utd2lkdGg6MzBweDt9LmNscy00e2ZpbGw6bm9uZTt9PC9zdHlsZT48L2RlZnM+PHBvbHlnb24gY2xhc3M9ImNscy0zIiBwb2ludHM9IjQzMy41MSAyMzAuOTUgNDMzLjUxIDQyNS44NSA3OC42IDQyNS44NSA3OC42IDcwLjkzIDMwNS42MSA3MC45MyA0MzMuNTEgMjMwLjk1Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNDI5Ljc1LDMwMC41N2MtMTcuNDQsMC0zMS41OCwxNC4xNC0zMS41OCwzMS41OHY2OS41NkgxMDYuNzRWMTEwLjI5aDE4MC45M2MxNy40NCwwLDMxLjU4LTE0LjE0LDMxLjU4LTMxLjU4cy0xNC4xNC0zMS41OC0zMS41OC0zMS41OEgxMDAuNjdjLTMxLjQ4LDAtNTcuMDksMjUuNjEtNTcuMDksNTcuMDl2MzAzLjU3YzAsMzEuNDgsMjUuNjEsNTcuMDksNTcuMDksNTcuMDloMzAzLjU3YzMxLjQ4LDAsNTcuMDktMjUuNjEsNTcuMDktNTcuMDl2LTc1LjY0YzAtMTcuNDQtMTQuMTQtMzEuNTgtMzEuNTgtMzEuNThaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNDg3LjE5LDE3Ni4zMmwtMTA5LjE4LTgyLjVjLTEzLjUzLTEwLjIyLTMyLjkxLS41Ny0zMi45MSwxNi4zOHY0OS44aC04NS41MmMtNDQuMDgsMC03OS45NCwzNS44Ni03OS45NCw3OS45NHYxMDAuNzZjMCwxNy40NCwxNC4xNCwzMS41OCwzMS41OCwzMS41OHMzMS41OC0xNC4xNCwzMS41OC0zMS41OHYtMTAwLjc2YzAtOS4yNiw3LjUzLTE2Ljc5LDE2Ljc5LTE2Ljc5aDg1LjUydjUyLjA1YzAsMTYuOTUsMTkuMzksMjYuNiwzMi45MSwxNi4zOGwxMDkuMTgtODIuNWMxMC44Ny04LjIyLDEwLjg3LTI0LjU1LDAtMzIuNzZaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNDI5Ljc1LDMwMC41N2MtMTcuNDQsMC0zMS41OCwxNC4xNC0zMS41OCwzMS41OHY2OS41NkgxMDYuNzRWMTEwLjI5aDE4MC45M2MxNy40NCwwLDMxLjU4LTE0LjE0LDMxLjU4LTMxLjU4cy0xNC4xNC0zMS41OC0zMS41OC0zMS41OEgxMDAuNjdjLTMxLjQ4LDAtNTcuMDksMjUuNjEtNTcuMDksNTcuMDl2MzAzLjU3YzAsMzEuNDgsMjUuNjEsNTcuMDksNTcuMDksNTcuMDloMzAzLjU3YzMxLjQ4LDAsNTcuMDktMjUuNjEsNTcuMDktNTcuMDl2LTc1LjY0YzAtMTcuNDQtMTQuMTQtMzEuNTgtMzEuNTgtMzEuNThaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDg3LjE5LDE3Ni4zMmwtMTA5LjE4LTgyLjVjLTEzLjUzLTEwLjIyLTMyLjkxLS41Ny0zMi45MSwxNi4zOHY0OS44aC04NS41MmMtNDQuMDgsMC03OS45NCwzNS44Ni03OS45NCw3OS45NHYxMDAuNzZjMCwxNy40NCwxNC4xNCwzMS41OCwzMS41OCwzMS41OHMzMS41OC0xNC4xNCwzMS41OC0zMS41OHYtMTAwLjc2YzAtOS4yNiw3LjUzLTE2Ljc5LDE2Ljc5LTE2Ljc5aDg1LjUydjUyLjA1YzAsMTYuOTUsMTkuMzksMjYuNiwzMi45MSwxNi4zOGwxMDkuMTgtODIuNWMxMC44Ny04LjIyLDEwLjg3LTI0LjU1LDAtMzIuNzZaIi8+PC9zdmc+
@@ -51,6 +51,7 @@
     shiftHours:        'c-_byXWDGtc5',
     responsibilities:  'c-A1t75QAb6Z',
     requirements:      'c-zVRbjcYT8V',
+    benefits:          'c-mbBX99xWN8',
   };
 
   const DEFAULT_INDUSTRIES = [
@@ -581,7 +582,7 @@
       channel: detectChannel(), contact: '', contactTitle: '',
       phoneEmail: '', status: 'Considering', interest: 3,
       connectionStrength: 'None', shiftHours: '',
-      responsibilities: '', requirements: '',
+      responsibilities: '', requirements: '', benefits: '',
     };
 
     const clean = (s) => String(s || '').replace(/\s+/g, ' ').trim();
@@ -959,10 +960,11 @@
       data.compType = inferCompType(data.description);
     }
 
-    // Section extraction — Responsibilities and Requirements from description
+    // Section extraction — Responsibilities, Requirements, Benefits from description
     const sections = extractDescriptionSections(data.description);
     data.responsibilities = sections.responsibilities;
     data.requirements     = sections.requirements;
+    data.benefits         = sections.benefits;
 
     return data;
   }
@@ -1610,18 +1612,21 @@
 
     const EDU_RE = /^(education(al)?( requirements| background| qualifications| experience)?|degree (requirements|preferred|required|qualifications)|academic (requirements|background|qualifications)|certifications? (and|&) education)[\s:]*$/i;
 
+    const BEN_RE = /^(benefits?( (and|&) (compensation|perks?))?|perks?( (and|&) benefits?)?|compensation (and|&) benefits?|what (we('re| are) offering|we offer|you('ll| will) get|to expect)|we('re| are)? offering|we offer|our benefits?|our perks?|total rewards?|employee benefits?|why (work here|work with us|join us|us))[\s:]*$/i;
+
     const stripBullet = s => s.replace(/^[•·*–—▪▸►✓✗✦◦-]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
 
     const lines = text.split('\n').map(l => norm(l.trim()));
     let section = null;
     let pendingBullet = false;
-    const resp = [], req = [], edu = [];
+    const resp = [], req = [], edu = [], ben = [];
 
     const pushItem = (item) => {
       if (!item || !section) return;
       if (section === 'resp') resp.push(item);
       else if (section === 'req') req.push(item);
       else if (section === 'edu') edu.push(item);
+      else if (section === 'ben') ben.push(item);
     };
 
     for (const line of lines) {
@@ -1629,6 +1634,7 @@
       if (RESP_RE.test(line)) { section = 'resp'; pendingBullet = false; continue; }
       if (REQ_RE.test(line))  { section = 'req';  pendingBullet = false; continue; }
       if (EDU_RE.test(line))  { section = 'edu';  pendingBullet = false; continue; }
+      if (BEN_RE.test(line))  { section = 'ben';  pendingBullet = false; continue; }
       // Any unrecognized heading-like line ends the current section
       if (isHeading(line))    { section = null;   pendingBullet = false; continue; }
       if (!section) { pendingBullet = false; continue; }
@@ -1652,6 +1658,7 @@
     return {
       responsibilities: fmt(resp),
       requirements:     fmt([...edu, ...req]),
+      benefits:         fmt(ben),
     };
   }
 
@@ -1680,6 +1687,7 @@
       ``,
       ...(data.responsibilities ? [`── Responsibilities ──`, ``, data.responsibilities, ``] : []),
       ...(data.requirements     ? [`── Requirements ──`,     ``, data.requirements,     ``] : []),
+      ...(data.benefits         ? [`── Benefits ──`,         ``, data.benefits,         ``] : []),
     ].join('\n');
   }
 
@@ -1716,6 +1724,9 @@
     updateGrabIndicator();
     registerShortcut();
     applyHighlights();
+    // Re-apply after delays to catch content that loads dynamically after panel init
+    setTimeout(() => { if (getHighlightEnabled()) applyHighlights(); }, 1200);
+    setTimeout(() => { if (getHighlightEnabled()) applyHighlights(); }, 3000);
   }
 
   // ─── Shortcut ─────────────────────────────────────────────────────────────────
@@ -1904,6 +1915,7 @@
         </div>
         <div class="jdg-field full"><label>Responsibilities</label><textarea id="jdg-f-responsibilities" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.responsibilities)}</textarea></div>
         <div class="jdg-field full"><label>Requirements</label><textarea id="jdg-f-requirements" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.requirements)}</textarea></div>
+        <div class="jdg-field full"><label>Benefits</label><textarea id="jdg-f-benefits" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.benefits)}</textarea></div>
 
       </div>
       </div>
@@ -2006,6 +2018,7 @@
         update('location', fresh.location);
         update('responsibilities', fresh.responsibilities);
         update('requirements', fresh.requirements);
+        update('benefits', fresh.benefits);
         // Comp type select
         const compEl = modal.querySelector('#jdg-f-compType');
         if (compEl && !compEl.value && fresh.compType) compEl.value = fresh.compType;
@@ -2209,6 +2222,7 @@
       description:        modal.querySelector('#jdg-f-description')?.value ?? fullDescription,
       responsibilities:   v('responsibilities'),
       requirements:       v('requirements'),
+      benefits:           v('benefits'),
     };
   }
 
@@ -2239,6 +2253,7 @@
       { column: COL.shiftHours,       value: data.shiftHours },
       { column: COL.responsibilities, value: data.responsibilities },
       { column: COL.requirements,     value: data.requirements },
+      { column: COL.benefits,         value: data.benefits },
     ];
 
     if (data.industries && data.industries.length > 0) {
