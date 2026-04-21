@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.10.2
+// @version      3.11.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -49,6 +49,8 @@
     interest:          'c-qi6YJ4B1xe',
     connectionStr:     'c-9Q7lbjLlik',
     shiftHours:        'c-_byXWDGtc5',
+    responsibilities:  'c-A1t75QAb6Z',
+    requirements:      'c-zVRbjcYT8V',
   };
 
   const DEFAULT_INDUSTRIES = [
@@ -579,6 +581,7 @@
       channel: detectChannel(), contact: '', contactTitle: '',
       phoneEmail: '', status: 'Considering', interest: 3,
       connectionStrength: 'None', shiftHours: '',
+      responsibilities: '', requirements: '',
     };
 
     const clean = (s) => String(s || '').replace(/\s+/g, ' ').trim();
@@ -955,6 +958,11 @@
     } else {
       data.compType = inferCompType(data.description);
     }
+
+    // Section extraction — Responsibilities and Requirements from description
+    const sections = extractDescriptionSections(data.description);
+    data.responsibilities = sections.responsibilities;
+    data.requirements     = sections.requirements;
 
     return data;
   }
@@ -1569,6 +1577,56 @@
     });
   }
 
+  // ─── Section Extraction ───────────────────────────────────────────────────────
+  // Parses Responsibilities and Requirements bullet lists from plain-text description.
+  // Education bullets are prepended to Requirements.
+  function extractDescriptionSections(text) {
+    if (!text) return { responsibilities: '', requirements: '' };
+
+    // Heuristic: a heading-like line is short, has no bullet prefix, doesn't end
+    // with sentence punctuation, and doesn't look like a requirement detail.
+    const isHeading = s =>
+      s.length <= 80 &&
+      !/^[•·*–—▪▸►✓✗✦◦]/.test(s) &&
+      !/^\d+[.)]\s/.test(s) &&
+      !/[.!?,;]$/.test(s) &&
+      s.split(/\s+/).length <= 8 &&
+      !/\d+\+?\s*(years?|months?|yrs?)\b/i.test(s);
+
+    const RESP_RE = /^(responsibilities|what (you('ll|'d| will) do|you('re)? ?(going to )?doing|you'd be doing)|your (role|responsibilities)|key responsibilities|day[\s-]to[\s-]day|job duties|duties( (and|&) responsibilities)?|about the role|in this role( you will)?|role overview|(primary|core|essential|main|key) (responsibilities|duties|functions)|position responsibilities|you will be responsible for|what does the job involve|the role|role (and|&) responsibilities)[\s:]*$/i;
+
+    const REQ_RE = /^(requirements|qualifications|what (we('re| are) looking for|you('ll| will) need|you need|you (bring|offer)|you should have|you have)|must.?haves?|(minimum|basic|required|preferred|desired|nice.to.have) (qualifications|skills|requirements)|preferred skills|about you|skills (and|&) experience|required skills|experience required|we('d| would) love to hear from you.*|work experience|what you should have|who you are|your background|(the )?ideal candidate.*|you bring|what you bring|technical (requirements|skills|qualifications)|we('re| are) looking for|knowledge (and|&) skills|education (and|&) experience)[\s:]*$/i;
+
+    const EDU_RE = /^(education(al)?( requirements| background| qualifications| experience)?|degree (requirements|preferred|required|qualifications)|academic (requirements|background|qualifications)|certifications? (and|&) education)[\s:]*$/i;
+
+    const stripBullet = s => s.replace(/^[•·*–—▪▸►✓✗✦◦]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
+
+    const lines = text.split('\n').map(l => l.trim());
+    let section = null;
+    const resp = [], req = [], edu = [];
+
+    for (const line of lines) {
+      if (!line) continue;
+      if (RESP_RE.test(line)) { section = 'resp'; continue; }
+      if (REQ_RE.test(line))  { section = 'req';  continue; }
+      if (EDU_RE.test(line))  { section = 'edu';  continue; }
+      // Any unrecognized heading-like line ends the current section
+      if (isHeading(line))    { section = null;   continue; }
+      if (!section) continue;
+      const item = stripBullet(line);
+      if (!item) continue;
+      if (section === 'resp') resp.push(item);
+      else if (section === 'req') req.push(item);
+      else if (section === 'edu') edu.push(item);
+    }
+
+    const fmt = arr => arr.map(s => `• ${s}`).join('\n');
+    return {
+      responsibilities: fmt(resp),
+      requirements:     fmt([...edu, ...req]),
+    };
+  }
+
   function formatAsText(data) {
     return [
       `Position:    ${data.position}`,
@@ -1591,6 +1649,9 @@
       `── Description ──`,
       ``,
       data.description,
+      ``,
+      ...(data.responsibilities ? [`── Responsibilities ──`, ``, data.responsibilities, ``] : []),
+      ...(data.requirements     ? [`── Requirements ──`,     ``, data.requirements,     ``] : []),
     ].join('\n');
   }
 
@@ -1813,6 +1874,8 @@
           <div class="jdg-desc-preview" id="jdg-desc-preview" style="max-height:1.6em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(data.description.slice(0, 200))}</div>
           <textarea id="jdg-f-description" style="display:none;width:100%;min-height:180px;font-size:12px;font-family:inherit;border:1px solid #ccc;border-radius:6px;padding:8px 10px;box-sizing:border-box;resize:vertical;">${escHtml(data.description)}</textarea>
         </div>
+        <div class="jdg-field full"><label>Responsibilities</label><textarea id="jdg-f-responsibilities" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.responsibilities)}</textarea></div>
+        <div class="jdg-field full"><label>Requirements</label><textarea id="jdg-f-requirements" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.requirements)}</textarea></div>
 
       </div>
       </div>
@@ -1913,6 +1976,8 @@
         update('shiftHours', fresh.shiftHours);
         update('jobRefNum', fresh.jobRefNum);
         update('location', fresh.location);
+        update('responsibilities', fresh.responsibilities);
+        update('requirements', fresh.requirements);
         // Comp type select
         const compEl = modal.querySelector('#jdg-f-compType');
         if (compEl && !compEl.value && fresh.compType) compEl.value = fresh.compType;
@@ -2113,7 +2178,9 @@
       interest:          parseInt(modal.querySelector('#jdg-interest')?.value || '3'),
       connectionStrength: v('connectionStrength'),
       shiftHours:         v('shiftHours'),
-      description:       modal.querySelector('#jdg-f-description')?.value ?? fullDescription,
+      description:        modal.querySelector('#jdg-f-description')?.value ?? fullDescription,
+      responsibilities:   v('responsibilities'),
+      requirements:       v('requirements'),
     };
   }
 
@@ -2140,8 +2207,10 @@
       { column: COL.channel,       value: data.channel },
       { column: COL.status,        value: data.status },
       { column: COL.interest,      value: data.interest },
-      { column: COL.connectionStr, value: data.connectionStrength },
-      { column: COL.shiftHours,    value: data.shiftHours },
+      { column: COL.connectionStr,    value: data.connectionStrength },
+      { column: COL.shiftHours,       value: data.shiftHours },
+      { column: COL.responsibilities, value: data.responsibilities },
+      { column: COL.requirements,     value: data.requirements },
     ];
 
     if (data.industries && data.industries.length > 0) {
