@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.9.0
+// @version      3.10.0
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -473,6 +473,17 @@
     .jdg-group-line {
       flex: 1; height: 1px; background: #eee;
     }
+
+    /* ── Page highlights ── */
+    .jdg-hl {
+      border-radius: 2px;
+      padding: 0 1px;
+      font: inherit !important;
+      color: inherit !important;
+      text-decoration: inherit !important;
+    }
+    .jdg-hl-yellow { background: #fffde7 !important; }
+    .jdg-hl-green  { background: #e8f5e9 !important; }
   `);
 
   // ─── State ───────────────────────────────────────────────────────────────────
@@ -500,6 +511,7 @@
     catch { return []; }
   }
   function saveDomainIndustries(arr) { GM_setValue('domainIndustries', JSON.stringify(arr)); }
+  function getHighlightEnabled() { return GM_getValue('highlightEnabled', true); }
   function getPosition() { return GM_getValue('panelPosition', 'top-right'); }
   function getShortcut() { return GM_getValue('shortcut', ''); }
   function getToken() { return GM_getValue('codaToken', '86235ca7-568d-48d4-9ee9-2cf4787859b4'); }
@@ -1449,6 +1461,106 @@
     return fields;
   }
 
+  // ─── Page Highlighting ───────────────────────────────────────────────────────
+  // Each entry: { src: regex source string, flags: string, cls: CSS class }
+  // Using src+flags (not /regex/ literals) avoids stale lastIndex across calls.
+  const HIGHLIGHT_RULES = [
+    // Yellow — Salary Range
+    { src: String.raw`\$[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?\s*(?:–|-|—|to)\s*\$?[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`\bbetween\s+\$[\d,]+(?:\.\d+)?\s+and\s+\$[\d,]+(?:\.\d+)?`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`\$[\d,]+(?:\.\d+)?\/(?:yr|year|hr|hour|wk|week|mo|month)\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    // Yellow — Remote Policy
+    { src: String.raw`\b(?:fully\s+remote|100%\s*remote|remote[\s-]only|work\s+(?:fully\s+)?remotely)\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`\bhybrid\s*(?:work|schedule|model|role|position|arrangement)?\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`\b(?:on[\s-]?site|in[\s-]?office)\s*(?:only|required)?\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    // Yellow — FT/PT/C/T
+    { src: String.raw`\bfull[- ]?time\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`\bpart[- ]?time\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    // Green — Hrs/Wk
+    { src: String.raw`\b\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?\s*(?:hours?|hrs?)\s*(?:per\s*week|\/\s*(?:week|wk))\b`, flags: 'gi', cls: 'jdg-hl-green' },
+    // Green — Comp Type
+    { src: String.raw`\b(?:on[\s-]?target\s+earnings?|ote)\b`, flags: 'gi', cls: 'jdg-hl-green' },
+    { src: String.raw`\b(?:commission[\s-]?based|uncapped\s+commission)\b`, flags: 'gi', cls: 'jdg-hl-green' },
+    { src: String.raw`\bper\s+diem\b`, flags: 'gi', cls: 'jdg-hl-green' },
+    { src: String.raw`\bhourly\s+(?:rate|pay|wage|compensation)\b`, flags: 'gi', cls: 'jdg-hl-green' },
+    { src: String.raw`\bbase\s+(?:salary\s+)?(?:\+|plus|and)\s+(?:bonus|equity)\b`, flags: 'gi', cls: 'jdg-hl-green' },
+    // Green — Shift / Hours
+    { src: String.raw`\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\s*(?:–|-|to)\s*\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)`, flags: 'gi', cls: 'jdg-hl-green' },
+    { src: String.raw`\b(?:day|night|morning|evening|overnight|first|second|third|swing)\s+shift\b`, flags: 'gi', cls: 'jdg-hl-green' },
+  ];
+
+  function _highlightInTextNode(textNode) {
+    const text = textNode.textContent;
+    const matches = [];
+
+    for (const { src, flags, cls } of HIGHLIGHT_RULES) {
+      const re = new RegExp(src, flags);
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, cls });
+      }
+    }
+
+    if (!matches.length) return;
+
+    matches.sort((a, b) => a.start - b.start);
+    // Remove overlapping matches (keep first)
+    const kept = [];
+    let lastEnd = 0;
+    for (const m of matches) {
+      if (m.start >= lastEnd) { kept.push(m); lastEnd = m.end; }
+    }
+
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    for (const m of kept) {
+      if (m.start > pos) frag.appendChild(document.createTextNode(text.slice(pos, m.start)));
+      const span = document.createElement('mark');
+      span.className = `jdg-hl ${m.cls}`;
+      span.textContent = text.slice(m.start, m.end);
+      frag.appendChild(span);
+      pos = m.end;
+    }
+    if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+
+    textNode.parentNode.replaceChild(frag, textNode);
+  }
+
+  function applyHighlights() {
+    removeHighlights();
+    if (!getHighlightEnabled()) return;
+
+    const JDG_IDS = new Set(['jdg-panel','jdg-overlay','jdg-site-overlay','jdg-settings-overlay']);
+    const SKIP_TAGS = new Set(['script','style','noscript','input','textarea','select','mark']);
+
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          const el = node.parentElement;
+          if (!el) return NodeFilter.FILTER_REJECT;
+          if (SKIP_TAGS.has(el.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
+          // Skip any JDG UI element
+          if (el.closest('[id^="jdg-"]')) return NodeFilter.FILTER_REJECT;
+          if (!node.textContent.trim()) return NodeFilter.FILTER_SKIP;
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      }
+    );
+
+    const nodes = [];
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    for (const node of nodes) _highlightInTextNode(node);
+  }
+
+  function removeHighlights() {
+    document.querySelectorAll('mark.jdg-hl').forEach(span => {
+      span.replaceWith(document.createTextNode(span.textContent));
+    });
+  }
+
   function formatAsText(data) {
     return [
       `Position:    ${data.position}`,
@@ -1506,6 +1618,7 @@
     document.body.appendChild(panel);
     updateGrabIndicator();
     registerShortcut();
+    applyHighlights();
   }
 
   // ─── Shortcut ─────────────────────────────────────────────────────────────────
@@ -1773,6 +1886,7 @@
       _lastExtractedData = null;
       _lastModalState = null;
       overlay.remove();
+      applyHighlights();
       doShowCodaModal();
     });
 
@@ -2312,6 +2426,18 @@
         </div>
 
         <div class="jdg-settings-section">
+          <h3>Page Highlighting</h3>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="jdg-highlight-toggle" ${getHighlightEnabled() ? 'checked' : ''}>
+            <span style="font-size:13px;">Highlight matched fields on page</span>
+          </label>
+          <div style="font-size:11px;color:#888;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="background:#fffde7;padding:1px 7px;border-radius:3px;border:1px solid #f0e68c;">Yellow</span><span style="color:#aaa;">Salary · Remote Policy · FT/PT/C/T</span>
+            <span style="background:#e8f5e9;padding:1px 7px;border-radius:3px;border:1px solid #a5d6a7;">Green</span><span style="color:#aaa;">Hrs/Wk · Comp Type · Shift</span>
+          </div>
+        </div>
+
+        <div class="jdg-settings-section">
           <div class="jdg-collapsible-header" id="jdg-ind-toggle">
             <h3>Industry Options</h3>
             <span class="jdg-collapsible-arrow" id="jdg-ind-arrow">▼</span>
@@ -2336,6 +2462,12 @@
 
     // Close button — attach after DOM insertion to ensure element is live
     document.getElementById('jdg-settings-close').addEventListener('click', () => overlay.remove());
+
+    // Highlight toggle
+    modal.querySelector('#jdg-highlight-toggle').addEventListener('change', (e) => {
+      GM_setValue('highlightEnabled', e.target.checked);
+      if (e.target.checked) applyHighlights(); else removeHighlights();
+    });
     modal.querySelector('#jdg-token-save').addEventListener('click', () => {
       const tok = modal.querySelector('#jdg-token-input').value.trim();
       GM_setValue('codaToken', tok);
