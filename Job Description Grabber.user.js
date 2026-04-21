@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.10.1
+// @version      3.10.2
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -888,11 +888,12 @@
         // 4. Single "$X/unit"
         // Optionally followed by "+ bonus", "+ equity", etc.
         const trailer = /(?:\s*\+\s*(?:bonus|equity|benefits|commission|incentive))*/.source;
+        const cur = '[$£€¥￥₩₹]';
         const salMatch =
-          bodyText.match(new RegExp(`\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|hour|wk|week|mo|month))?\\s+to\\s+\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
-          bodyText.match(/between\s+\$[\d,]+(?:\.\d+)?\s+and\s+\$[\d,]+(?:\.\d+)?/i) ||
-          bodyText.match(new RegExp(`\\$[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?\\s*[-–—]\\s*\\$?[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
-          bodyText.match(/\$[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?/i);
+          bodyText.match(new RegExp(`${cur}[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?\\s+to\\s+${cur}[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
+          bodyText.match(new RegExp(`between\\s+${cur}[\\d,]+(?:\\.\\d+)?\\s+and\\s+${cur}[\\d,]+(?:\\.\\d+)?`, 'i')) ||
+          bodyText.match(new RegExp(`${cur}[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?\\s*[-–—]\\s*${cur}?[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?${trailer}`, 'i')) ||
+          bodyText.match(new RegExp(`${cur}[\\d,]+(?:\\.\\d+)?(?:\\/(?:yr|year|hr|hour|wk|week|mo|month))?`, 'i'));
         if (salMatch) data.salaryRange = salMatch[0].trim();
       }
       if (!data.jobRefNum) {
@@ -1471,10 +1472,10 @@
   // Each entry: { src: regex source string, flags: string, cls: CSS class }
   // Using src+flags (not /regex/ literals) avoids stale lastIndex across calls.
   const HIGHLIGHT_RULES = [
-    // Yellow — Salary Range
-    { src: String.raw`\$[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?\s*(?:–|-|—|to)\s*\$?[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?`, flags: 'gi', cls: 'jdg-hl-yellow' },
-    { src: String.raw`\bbetween\s+\$[\d,]+(?:\.\d+)?\s+and\s+\$[\d,]+(?:\.\d+)?`, flags: 'gi', cls: 'jdg-hl-yellow' },
-    { src: String.raw`\$[\d,]+(?:\.\d+)?\/(?:yr|year|hr|hour|wk|week|mo|month)\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    // Yellow — Salary Range  ($£€¥￥₩₹)
+    { src: String.raw`[$£€¥￥₩₹][\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?\s*(?:–|-|—|to)\s*[$£€¥￥₩₹]?[\d,]+(?:\.\d+)?(?:\/(?:yr|year|hr|hour|wk|week|mo|month))?`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`\bbetween\s+[$£€¥￥₩₹][\d,]+(?:\.\d+)?\s+and\s+[$£€¥￥₩₹][\d,]+(?:\.\d+)?`, flags: 'gi', cls: 'jdg-hl-yellow' },
+    { src: String.raw`[$£€¥￥₩₹][\d,]+(?:\.\d+)?\/(?:yr|year|hr|hour|wk|week|mo|month)\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
     // Yellow — Remote Policy
     { src: String.raw`\b(?:fully\s+remote|100%\s*remote|remote[\s-]only|work\s+(?:fully\s+)?remotely)\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
     { src: String.raw`\bhybrid\s*(?:work|schedule|model|role|position|arrangement)?\b`, flags: 'gi', cls: 'jdg-hl-yellow' },
