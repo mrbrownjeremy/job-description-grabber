@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.10.0
+// @version      3.10.1
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -482,8 +482,8 @@
       color: inherit !important;
       text-decoration: inherit !important;
     }
-    .jdg-hl-yellow { background: #fffde7 !important; }
-    .jdg-hl-green  { background: #e8f5e9 !important; }
+    .jdg-hl-yellow { background: var(--jdg-hl-yellow, #fff59d) !important; }
+    .jdg-hl-green  { background: var(--jdg-hl-green,  #c8e6c9) !important; }
   `);
 
   // ─── State ───────────────────────────────────────────────────────────────────
@@ -512,6 +512,12 @@
   }
   function saveDomainIndustries(arr) { GM_setValue('domainIndustries', JSON.stringify(arr)); }
   function getHighlightEnabled() { return GM_getValue('highlightEnabled', true); }
+  function getHighlightYellow()  { return GM_getValue('highlightYellow', '#fff59d'); }
+  function getHighlightGreen()   { return GM_getValue('highlightGreen',  '#c8e6c9'); }
+  function applyHighlightColors() {
+    document.documentElement.style.setProperty('--jdg-hl-yellow', getHighlightYellow());
+    document.documentElement.style.setProperty('--jdg-hl-green',  getHighlightGreen());
+  }
   function getPosition() { return GM_getValue('panelPosition', 'top-right'); }
   function getShortcut() { return GM_getValue('shortcut', ''); }
   function getToken() { return GM_getValue('codaToken', '86235ca7-568d-48d4-9ee9-2cf4787859b4'); }
@@ -1527,6 +1533,7 @@
   }
 
   function applyHighlights() {
+    applyHighlightColors();
     removeHighlights();
     if (!getHighlightEnabled()) return;
 
@@ -2427,13 +2434,19 @@
 
         <div class="jdg-settings-section">
           <h3>Page Highlighting</h3>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
             <input type="checkbox" id="jdg-highlight-toggle" ${getHighlightEnabled() ? 'checked' : ''}>
             <span style="font-size:13px;">Highlight matched fields on page</span>
           </label>
-          <div style="font-size:11px;color:#888;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
-            <span style="background:#fffde7;padding:1px 7px;border-radius:3px;border:1px solid #f0e68c;">Yellow</span><span style="color:#aaa;">Salary · Remote Policy · FT/PT/C/T</span>
-            <span style="background:#e8f5e9;padding:1px 7px;border-radius:3px;border:1px solid #a5d6a7;">Green</span><span style="color:#aaa;">Hrs/Wk · Comp Type · Shift</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <input type="color" id="jdg-hl-color-yellow" value="${getHighlightYellow()}" style="width:32px;height:24px;padding:1px 2px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fafafa;">
+            <span id="jdg-hl-swatch-yellow" style="background:${getHighlightYellow()};padding:2px 8px;border-radius:3px;font-size:11px;border:1px solid rgba(0,0,0,0.08);">Yellow</span>
+            <span style="font-size:11px;color:#888;">Salary · Remote Policy · FT/PT/C/T</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="jdg-hl-color-green" value="${getHighlightGreen()}" style="width:32px;height:24px;padding:1px 2px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fafafa;">
+            <span id="jdg-hl-swatch-green" style="background:${getHighlightGreen()};padding:2px 8px;border-radius:3px;font-size:11px;border:1px solid rgba(0,0,0,0.08);">Green</span>
+            <span style="font-size:11px;color:#888;">Hrs/Wk · Comp Type · Shift</span>
           </div>
         </div>
 
@@ -2467,6 +2480,18 @@
     modal.querySelector('#jdg-highlight-toggle').addEventListener('change', (e) => {
       GM_setValue('highlightEnabled', e.target.checked);
       if (e.target.checked) applyHighlights(); else removeHighlights();
+    });
+
+    // Highlight color pickers
+    modal.querySelector('#jdg-hl-color-yellow').addEventListener('input', (e) => {
+      GM_setValue('highlightYellow', e.target.value);
+      modal.querySelector('#jdg-hl-swatch-yellow').style.background = e.target.value;
+      applyHighlightColors();
+    });
+    modal.querySelector('#jdg-hl-color-green').addEventListener('input', (e) => {
+      GM_setValue('highlightGreen', e.target.value);
+      modal.querySelector('#jdg-hl-swatch-green').style.background = e.target.value;
+      applyHighlightColors();
     });
     modal.querySelector('#jdg-token-save').addEventListener('click', () => {
       const tok = modal.querySelector('#jdg-token-input').value.trim();
