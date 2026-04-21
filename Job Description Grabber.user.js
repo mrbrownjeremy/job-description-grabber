@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.11.0
+// @version      3.11.1
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=coda.io
@@ -1583,25 +1583,30 @@
   function extractDescriptionSections(text) {
     if (!text) return { responsibilities: '', requirements: '' };
 
-    // Heuristic: a heading-like line is short, has no bullet prefix, doesn't end
-    // with sentence punctuation, and doesn't look like a requirement detail.
+    // Normalize smart/curly apostrophes and quotes to plain ASCII so regexes match reliably
+    const norm = s => s.replace(/[\u2018\u2019\u201b\u02bc]/g, "'").replace(/[\u201c\u201d]/g, '"');
+
+    // A bullet line starts with a recognized bullet character or a digit-dot/paren list marker.
+    // Includes plain hyphen (-) for markdown-style lists from ld+json descriptions.
+    const isBulletLine = s => /^[•·*–—▪▸►✓✗✦◦-]\s/.test(s) || /^\d+[.)]\s/.test(s);
+
+    // A heading-like line is short, not a bullet, not sentence-ending, not a quantity phrase.
     const isHeading = s =>
       s.length <= 80 &&
-      !/^[•·*–—▪▸►✓✗✦◦]/.test(s) &&
-      !/^\d+[.)]\s/.test(s) &&
+      !isBulletLine(s) &&
       !/[.!?,;]$/.test(s) &&
       s.split(/\s+/).length <= 8 &&
       !/\d+\+?\s*(years?|months?|yrs?)\b/i.test(s);
 
     const RESP_RE = /^(responsibilities|what (you('ll|'d| will) do|you('re)? ?(going to )?doing|you'd be doing)|your (role|responsibilities)|key responsibilities|day[\s-]to[\s-]day|job duties|duties( (and|&) responsibilities)?|about the role|in this role( you will)?|role overview|(primary|core|essential|main|key) (responsibilities|duties|functions)|position responsibilities|you will be responsible for|what does the job involve|the role|role (and|&) responsibilities)[\s:]*$/i;
 
-    const REQ_RE = /^(requirements|qualifications|what (we('re| are) looking for|you('ll| will) need|you need|you (bring|offer)|you should have|you have)|must.?haves?|(minimum|basic|required|preferred|desired|nice.to.have) (qualifications|skills|requirements)|preferred skills|about you|skills (and|&) experience|required skills|experience required|we('d| would) love to hear from you.*|work experience|what you should have|who you are|your background|(the )?ideal candidate.*|you bring|what you bring|technical (requirements|skills|qualifications)|we('re| are) looking for|knowledge (and|&) skills|education (and|&) experience)[\s:]*$/i;
+    const REQ_RE = /^(requirements|qualifications|what (we('re| are) looking for|you('ll| will) (need|bring|offer)|you need|you('ll| will)? (bring|offer)|you should have|you have)|must.?haves?|(minimum|basic|required|preferred|desired|nice.to.have) (qualifications|skills|requirements)|preferred skills|about you|skills (and|&) experience|required skills|experience required|we('d| would) love to hear from you.*|work experience|what you should have|who you are|your background|(the )?ideal candidate.*|you bring|what you bring|technical (requirements|skills|qualifications)|we('re| are) looking for|knowledge (and|&) skills|education (and|&) experience)[\s:]*$/i;
 
     const EDU_RE = /^(education(al)?( requirements| background| qualifications| experience)?|degree (requirements|preferred|required|qualifications)|academic (requirements|background|qualifications)|certifications? (and|&) education)[\s:]*$/i;
 
-    const stripBullet = s => s.replace(/^[•·*–—▪▸►✓✗✦◦]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
+    const stripBullet = s => s.replace(/^[•·*–—▪▸►✓✗✦◦-]\s*/, '').replace(/^\d+[.)]\s*/, '').trim();
 
-    const lines = text.split('\n').map(l => l.trim());
+    const lines = text.split('\n').map(l => norm(l.trim()));
     let section = null;
     const resp = [], req = [], edu = [];
 
@@ -1612,7 +1617,8 @@
       if (EDU_RE.test(line))  { section = 'edu';  continue; }
       // Any unrecognized heading-like line ends the current section
       if (isHeading(line))    { section = null;   continue; }
-      if (!section) continue;
+      // Only collect bullet-prefixed lines — intro paragraphs within a section are ignored
+      if (!section || !isBulletLine(line)) continue;
       const item = stripBullet(line);
       if (!item) continue;
       if (section === 'resp') resp.push(item);
