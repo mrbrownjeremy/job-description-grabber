@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.11.3
+// @version      3.11.4
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6bm9uZTtzdHJva2U6I2ZmZjtzdHJva2Utd2lkdGg6NjBweDt9LmNscy0ye2ZpbGw6I2ZmZjt9PC9zdHlsZT48L2RlZnM+PHJlY3QgY2xhc3M9ImNscy0yIiB4PSIxNDAuNjQiIHk9IjE0MC42NCIgd2lkdGg9IjI1Ny42NSIgaGVpZ2h0PSIyMzAuNzIiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zOTYuMzYsMjkxLjI5Yy0xMy44MSwwLTI1LDExLjE5LTI1LDI1djU1LjA3aC0yMzAuNzJ2LTIzMC43MmgxNDMuMjRjMTMuODEsMCwyNS0xMS4xOSwyNS0yNXMtMTEuMTktMjUtMjUtMjVoLTE0OC4wNWMtMjQuOTIsMC00NS4xOSwyMC4yNy00NS4xOSw0NS4xOXYyNDAuMzNjMCwyNC45MiwyMC4yNyw0NS4xOSw0NS4xOSw0NS4xOWgyNDAuMzNjMjQuOTIsMCw0NS4xOS0yMC4yNyw0NS4xOS00NS4xOXYtNTkuODhjMC0xMy44MS0xMS4xOS0yNS0yNS0yNVoiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00NDEuODQsMTkyLjkybC04Ni40My02NS4zMmMtMTAuNzEtOC4wOS0yNi4wNi0uNDUtMjYuMDYsMTIuOTd2MzkuNDJoLTY3LjcxYy0zNC45LDAtNjMuMjksMjguMzktNjMuMjksNjMuMjl2NzkuNzdjMCwxMy44MSwxMS4xOSwyNSwyNSwyNXMyNS0xMS4xOSwyNS0yNXYtNzkuNzdjMC03LjMzLDUuOTYtMTMuMjksMTMuMjktMTMuMjloNjcuNzF2NDEuMjFjMCwxMy40MiwxNS4zNSwyMS4wNiwyNi4wNiwxMi45N2w4Ni40My02NS4zMmM4LjYxLTYuNSw4LjYxLTE5LjQzLDAtMjUuOTRaIi8+PHBhdGggZD0iTTM5Ni4zNiwyOTEuMjljLTEzLjgxLDAtMjUsMTEuMTktMjUsMjV2NTUuMDdoLTIzMC43MnYtMjMwLjcyaDE0My4yNGMxMy44MSwwLDI1LTExLjE5LDI1LTI1cy0xMS4xOS0yNS0yNS0yNWgtMTQ4LjA1Yy0yNC45MiwwLTQ1LjE5LDIwLjI3LTQ1LjE5LDQ1LjE5djI0MC4zM2MwLDI0LjkyLDIwLjI3LDQ1LjE5LDQ1LjE5LDQ1LjE5aDI0MC4zM2MyNC45MiwwLDQ1LjE5LTIwLjI3LDQ1LjE5LTQ1LjE5di01OS44OGMwLTEzLjgxLTExLjE5LTI1LTI1LTI1WiIvPjxwYXRoIGQ9Ik00NDEuODQsMTkyLjkybC04Ni40My02NS4zMmMtMTAuNzEtOC4wOS0yNi4wNi0uNDUtMjYuMDYsMTIuOTd2MzkuNDJoLTY3LjcxYy0zNC45LDAtNjMuMjksMjguMzktNjMuMjksNjMuMjl2NzkuNzdjMCwxMy44MSwxMS4xOSwyNSwyNSwyNXMyNS0xMS4xOSwyNS0yNXYtNzkuNzdjMC03LjMzLDUuOTYtMTMuMjksMTMuMjktMTMuMjloNjcuNzF2NDEuMjFjMCwxMy40MiwxNS4zNSwyMS4wNiwyNi4wNiwxMi45N2w4Ni40My02NS4zMmM4LjYxLTYuNSw4LjYxLTE5LjQzLDAtMjUuOTRaIi8+PC9zdmc+
@@ -1608,22 +1608,38 @@
 
     const lines = text.split('\n').map(l => norm(l.trim()));
     let section = null;
+    let pendingBullet = false;
     const resp = [], req = [], edu = [];
 
-    for (const line of lines) {
-      if (!line) continue;
-      if (RESP_RE.test(line)) { section = 'resp'; continue; }
-      if (REQ_RE.test(line))  { section = 'req';  continue; }
-      if (EDU_RE.test(line))  { section = 'edu';  continue; }
-      // Any unrecognized heading-like line ends the current section
-      if (isHeading(line))    { section = null;   continue; }
-      // Only collect bullet-prefixed lines — intro paragraphs within a section are ignored
-      if (!section || !isBulletLine(line)) continue;
-      const item = stripBullet(line);
-      if (!item) continue;
+    const pushItem = (item) => {
+      if (!item || !section) return;
       if (section === 'resp') resp.push(item);
       else if (section === 'req') req.push(item);
       else if (section === 'edu') edu.push(item);
+    };
+
+    for (const line of lines) {
+      if (!line) continue;
+      if (RESP_RE.test(line)) { section = 'resp'; pendingBullet = false; continue; }
+      if (REQ_RE.test(line))  { section = 'req';  pendingBullet = false; continue; }
+      if (EDU_RE.test(line))  { section = 'edu';  pendingBullet = false; continue; }
+      // Any unrecognized heading-like line ends the current section
+      if (isHeading(line))    { section = null;   pendingBullet = false; continue; }
+      if (!section) { pendingBullet = false; continue; }
+      // Standalone bullet marker on its own line (e.g. "•" with no content following)
+      if (/^[•·*–—▪▸►✓✗✦◦-]$/.test(line)) { pendingBullet = true; continue; }
+      // Standard bullet + content on same line
+      if (isBulletLine(line)) {
+        pendingBullet = false;
+        pushItem(stripBullet(line));
+        continue;
+      }
+      // Content line following a standalone bullet marker
+      if (pendingBullet) {
+        pendingBullet = false;
+        pushItem(line);
+        continue;
+      }
     }
 
     const fmt = arr => arr.map(s => `• ${s}`).join('\n');
