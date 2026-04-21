@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.12.3
+// @version      3.12.4
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2YxNzMyNDt9LmNscy0ye2ZpbGw6IzQyNDZkMTt9LmNscy0ze2ZpbGw6I2IzZmZlMzt9LmNscy0zLC5jbHMtNHtzdHJva2U6I2IzZmZlMztzdHJva2Utd2lkdGg6MzBweDt9LmNscy00e2ZpbGw6bm9uZTt9PC9zdHlsZT48L2RlZnM+PHBvbHlnb24gY2xhc3M9ImNscy0zIiBwb2ludHM9IjQzMy41MSAyMzAuOTUgNDMzLjUxIDQyNS44NSA3OC42IDQyNS44NSA3OC42IDcwLjkzIDMwNS42MSA3MC45MyA0MzMuNTEgMjMwLjk1Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNDI5Ljc1LDMwMC41N2MtMTcuNDQsMC0zMS41OCwxNC4xNC0zMS41OCwzMS41OHY2OS41NkgxMDYuNzRWMTEwLjI5aDE4MC45M2MxNy40NCwwLDMxLjU4LTE0LjE0LDMxLjU4LTMxLjU4cy0xNC4xNC0zMS41OC0zMS41OC0zMS41OEgxMDAuNjdjLTMxLjQ4LDAtNTcuMDksMjUuNjEtNTcuMDksNTcuMDl2MzAzLjU3YzAsMzEuNDgsMjUuNjEsNTcuMDksNTcuMDksNTcuMDloMzAzLjU3YzMxLjQ4LDAsNTcuMDktMjUuNjEsNTcuMDktNTcuMDl2LTc1LjY0YzAtMTcuNDQtMTQuMTQtMzEuNTgtMzEuNTgtMzEuNThaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNDg3LjE5LDE3Ni4zMmwtMTA5LjE4LTgyLjVjLTEzLjUzLTEwLjIyLTMyLjkxLS41Ny0zMi45MSwxNi4zOHY0OS44aC04NS41MmMtNDQuMDgsMC03OS45NCwzNS44Ni03OS45NCw3OS45NHYxMDAuNzZjMCwxNy40NCwxNC4xNCwzMS41OCwzMS41OCwzMS41OHMzMS41OC0xNC4xNCwzMS41OC0zMS41OHYtMTAwLjc2YzAtOS4yNiw3LjUzLTE2Ljc5LDE2Ljc5LTE2Ljc5aDg1LjUydjUyLjA1YzAsMTYuOTUsMTkuMzksMjYuNiwzMi45MSwxNi4zOGwxMDkuMTgtODIuNWMxMC44Ny04LjIyLDEwLjg3LTI0LjU1LDAtMzIuNzZaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNDI5Ljc1LDMwMC41N2MtMTcuNDQsMC0zMS41OCwxNC4xNC0zMS41OCwzMS41OHY2OS41NkgxMDYuNzRWMTEwLjI5aDE4MC45M2MxNy40NCwwLDMxLjU4LTE0LjE0LDMxLjU4LTMxLjU4cy0xNC4xNC0zMS41OC0zMS41OC0zMS41OEgxMDAuNjdjLTMxLjQ4LDAtNTcuMDksMjUuNjEtNTcuMDksNTcuMDl2MzAzLjU3YzAsMzEuNDgsMjUuNjEsNTcuMDksNTcuMDksNTcuMDloMzAzLjU3YzMxLjQ4LDAsNTcuMDktMjUuNjEsNTcuMDktNTcuMDl2LTc1LjY0YzAtMTcuNDQtMTQuMTQtMzEuNTgtMzEuNTgtMzEuNThaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDg3LjE5LDE3Ni4zMmwtMTA5LjE4LTgyLjVjLTEzLjUzLTEwLjIyLTMyLjkxLS41Ny0zMi45MSwxNi4zOHY0OS44aC04NS41MmMtNDQuMDgsMC03OS45NCwzNS44Ni03OS45NCw3OS45NHYxMDAuNzZjMCwxNy40NCwxNC4xNCwzMS41OCwzMS41OCwzMS41OHMzMS41OC0xNC4xNCwzMS41OC0zMS41OHYtMTAwLjc2YzAtOS4yNiw3LjUzLTE2Ljc5LDE2Ljc5LTE2Ljc5aDg1LjUydjUyLjA1YzAsMTYuOTUsMTkuMzksMjYuNiwzMi45MSwxNi4zOGwxMDkuMTgtODIuNWMxMC44Ny04LjIyLDEwLjg3LTI0LjU1LDAtMzIuNzZaIi8+PC9zdmc+
@@ -1906,9 +1906,6 @@
         ${field('jobRefNum',    'Job Ref #',     'input', data.jobRefNum)}
 
         <div class="jdg-group"><span class="jdg-group-label">Addt'l Info</span><span class="jdg-group-line"></span></div>
-        ${field('contact',      'Contact',       'input', data.contact)}
-        ${field('phoneEmail',   'Phone/Email',   'input', data.phoneEmail)}
-
         <div class="jdg-field">
           <label>Interest (1–5)</label>
           <div class="jdg-interest-wrap">
@@ -1918,14 +1915,18 @@
         </div>
         ${selectField('connectionStrength', 'Connection Strength', CONNSTR_OPTIONS, data.connectionStrength)}
 
-        <div class="jdg-group"><span class="jdg-group-label">Description</span><span class="jdg-group-line"></span><button id="jdg-desc-edit-btn" style="margin-left:8px;padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;">Edit</button></div>
-        <div class="jdg-field full">
+        <div class="jdg-group"><span class="jdg-group-label">Sections</span><span class="jdg-group-line"></span></div>
+        <div class="jdg-field"><label>Responsibilities</label><textarea id="jdg-f-responsibilities" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.responsibilities)}</textarea></div>
+        <div class="jdg-field"><label>Requirements</label><textarea id="jdg-f-requirements" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.requirements)}</textarea></div>
+        <div class="jdg-field">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+            <label style="margin:0;flex-shrink:0;">Description</label>
+            <button id="jdg-desc-edit-btn" style="padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;">Edit</button>
+          </div>
           <div class="jdg-desc-preview" id="jdg-desc-preview" style="max-height:1.6em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(data.description.slice(0, 200))}</div>
           <textarea id="jdg-f-description" style="display:none;width:100%;min-height:180px;font-size:12px;font-family:inherit;border:1px solid #ccc;border-radius:6px;padding:8px 10px;box-sizing:border-box;resize:vertical;">${escHtml(data.description)}</textarea>
         </div>
-        <div class="jdg-field"><label>Responsibilities</label><textarea id="jdg-f-responsibilities" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.responsibilities)}</textarea></div>
-        <div class="jdg-field"><label>Requirements</label><textarea id="jdg-f-requirements" style="min-height:80px;font-size:12px;font-family:inherit;white-space:pre-wrap;">${escHtml(data.requirements)}</textarea></div>
-        <div class="jdg-field full">
+        <div class="jdg-field">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
             <label style="margin:0;flex-shrink:0;">Benefits</label>
             <button id="jdg-ben-edit-btn" style="padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;">Edit</button>
@@ -1933,6 +1934,10 @@
           <div class="jdg-desc-preview" id="jdg-ben-preview" style="max-height:1.6em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escHtml(data.benefits.slice(0, 200))}</div>
           <textarea id="jdg-f-benefits" style="display:none;width:100%;min-height:80px;font-size:12px;font-family:inherit;border:1px solid #ccc;border-radius:6px;padding:8px 10px;box-sizing:border-box;resize:vertical;white-space:pre-wrap;">${escHtml(data.benefits)}</textarea>
         </div>
+
+        <div class="jdg-group"><span class="jdg-group-label">Contact</span><span class="jdg-group-line"></span></div>
+        ${field('contact',      'Contact',       'input', data.contact)}
+        ${field('phoneEmail',   'Phone/Email',   'input', data.phoneEmail)}
 
       </div>
       </div>
@@ -2000,12 +2005,12 @@
         preview.style.display = 'none';
         textarea.style.display = '';
         btn.textContent = 'Done';
-        btn.style.cssText = 'margin-left:8px;padding:1px 8px;font-size:11px;border:1px solid #4a4adf;border-radius:4px;background:#4a4adf;cursor:pointer;color:#fff;flex-shrink:0;';
+        btn.style.cssText = 'padding:1px 8px;font-size:11px;border:1px solid #4a4adf;border-radius:4px;background:#4a4adf;cursor:pointer;color:#fff;flex-shrink:0;';
       } else {
         preview.style.display = '';
         textarea.style.display = 'none';
         btn.textContent = 'Edit';
-        btn.style.cssText = 'margin-left:8px;padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;';
+        btn.style.cssText = 'padding:1px 8px;font-size:11px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;color:#555;flex-shrink:0;';
       }
     });
 
