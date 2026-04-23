@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Job Description Grabber
 // @namespace    https://github.com/mrbrownjeremy
-// @version      3.12.12
+// @version      3.12.13
 // @description  Grab job descriptions from job sites and send to clipboard, TXT, or Coda DB Job Applications
 // @author       Jeremy Brown
 // @icon         data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2YxNzMyNDt9LmNscy0ye2ZpbGw6IzQyNDZkMTt9LmNscy0ze2ZpbGw6I2IzZmZlMzt9LmNscy0zLC5jbHMtNHtzdHJva2U6I2IzZmZlMztzdHJva2Utd2lkdGg6MzBweDt9LmNscy00e2ZpbGw6bm9uZTt9PC9zdHlsZT48L2RlZnM+PHBvbHlnb24gY2xhc3M9ImNscy0zIiBwb2ludHM9IjQzMy41MSAyMzAuOTUgNDMzLjUxIDQyNS44NSA3OC42IDQyNS44NSA3OC42IDcwLjkzIDMwNS42MSA3MC45MyA0MzMuNTEgMjMwLjk1Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNDI5Ljc1LDMwMC41N2MtMTcuNDQsMC0zMS41OCwxNC4xNC0zMS41OCwzMS41OHY2OS41NkgxMDYuNzRWMTEwLjI5aDE4MC45M2MxNy40NCwwLDMxLjU4LTE0LjE0LDMxLjU4LTMxLjU4cy0xNC4xNC0zMS41OC0zMS41OC0zMS41OEgxMDAuNjdjLTMxLjQ4LDAtNTcuMDksMjUuNjEtNTcuMDksNTcuMDl2MzAzLjU3YzAsMzEuNDgsMjUuNjEsNTcuMDksNTcuMDksNTcuMDloMzAzLjU3YzMxLjQ4LDAsNTcuMDktMjUuNjEsNTcuMDktNTcuMDl2LTc1LjY0YzAtMTcuNDQtMTQuMTQtMzEuNTgtMzEuNTgtMzEuNThaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNDg3LjE5LDE3Ni4zMmwtMTA5LjE4LTgyLjVjLTEzLjUzLTEwLjIyLTMyLjkxLS41Ny0zMi45MSwxNi4zOHY0OS44aC04NS41MmMtNDQuMDgsMC03OS45NCwzNS44Ni03OS45NCw3OS45NHYxMDAuNzZjMCwxNy40NCwxNC4xNCwzMS41OCwzMS41OCwzMS41OHMzMS41OC0xNC4xNCwzMS41OC0zMS41OHYtMTAwLjc2YzAtOS4yNiw3LjUzLTE2Ljc5LDE2Ljc5LTE2Ljc5aDg1LjUydjUyLjA1YzAsMTYuOTUsMTkuMzksMjYuNiwzMi45MSwxNi4zOGwxMDkuMTgtODIuNWMxMC44Ny04LjIyLDEwLjg3LTI0LjU1LDAtMzIuNzZaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNDI5Ljc1LDMwMC41N2MtMTcuNDQsMC0zMS41OCwxNC4xNC0zMS41OCwzMS41OHY2OS41NkgxMDYuNzRWMTEwLjI5aDE4MC45M2MxNy40NCwwLDMxLjU4LTE0LjE0LDMxLjU4LTMxLjU4cy0xNC4xNC0zMS41OC0zMS41OC0zMS41OEgxMDAuNjdjLTMxLjQ4LDAtNTcuMDksMjUuNjEtNTcuMDksNTcuMDl2MzAzLjU3YzAsMzEuNDgsMjUuNjEsNTcuMDksNTcuMDksNTcuMDloMzAzLjU3YzMxLjQ4LDAsNTcuMDktMjUuNjEsNTcuMDktNTcuMDl2LTc1LjY0YzAtMTcuNDQtMTQuMTQtMzEuNTgtMzEuNTgtMzEuNThaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDg3LjE5LDE3Ni4zMmwtMTA5LjE4LTgyLjVjLTEzLjUzLTEwLjIyLTMyLjkxLS41Ny0zMi45MSwxNi4zOHY0OS44aC04NS41MmMtNDQuMDgsMC03OS45NCwzNS44Ni03OS45NCw3OS45NHYxMDAuNzZjMCwxNy40NCwxNC4xNCwzMS41OCwzMS41OCwzMS41OHMzMS41OC0xNC4xNCwzMS41OC0zMS41OHYtMTAwLjc2YzAtOS4yNiw3LjUzLTE2Ljc5LDE2Ljc5LTE2Ljc5aDg1LjUydjUyLjA1YzAsMTYuOTUsMTkuMzksMjYuNiwzMi45MSwxNi4zOGwxMDkuMTgtODIuNWMxMC44Ny04LjIyLDEwLjg3LTI0LjU1LDAtMzIuNzZaIi8+PC9zdmc+
@@ -604,15 +604,20 @@
     const badEmployerValue = (s) => /^(company|employer|organization|business|corp|inc)$/i.test(clean(s));
     const isGusto = location.hostname.includes('gusto.com');
 
-    // Try ld+json first
+    // Try ld+json first — process only the FIRST JobPosting to avoid picking up
+    // salary/data from "similar jobs" schemas injected by aggregator sites.
+    let ldJobFound = false;
     const scripts = document.querySelectorAll('script[type="application/ld+json"]');
     for (const s of scripts) {
+      if (ldJobFound) break;
       try {
         const json = JSON.parse(s.textContent);
         const jobs = Array.isArray(json) ? json : [json];
         for (const j of jobs) {
+          if (ldJobFound) break;
           const type = j['@type'];
           if (type === 'JobPosting' || (Array.isArray(type) && type.includes('JobPosting'))) {
+            ldJobFound = true;
             data.position    = j.title || data.position;
             data.employer    = (j.hiringOrganization && j.hiringOrganization.name) || data.employer;
             data.jobRefNum   = j.identifier?.value || j.identifier || data.jobRefNum;
@@ -620,7 +625,7 @@
             if (data.jobRefNum && /[\/\\]|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(data.jobRefNum)) {
               data.jobRefNum = '';
             }
-            data.salaryRange = extractSalaryFromLD(j);
+            data.salaryRange = extractSalaryFromLD(j) || data.salaryRange;
 
             if (j.jobLocation) {
               const loc = Array.isArray(j.jobLocation) ? j.jobLocation[0] : j.jobLocation;
@@ -894,10 +899,16 @@
     const lfLocation = lf(['location', 'job location', 'work location', 'office location']);
     if (lfLocation) data.location = lfLocation;
 
-    // Fallback: bodyText regex for salary and job ref if still missing
-    // Clone body and strip input/select values to avoid slider artifacts
+    // Fallback: bodyText regex for salary and job ref if still missing.
+    // Scope to the narrowest identifiable content container to exclude sidebars
+    // (e.g. SimplyHired's "similar jobs" div is a sibling of the job <aside>).
     if (!data.salaryRange || !data.jobRefNum) {
-      const clone = document.body.cloneNode(true);
+      const isSH = location.hostname.includes('simplyhired.com');
+      const contentRoot =
+        document.querySelector('main, [role="main"], article') ||
+        (isSH ? document.querySelector('aside[aria-label]') : null) ||
+        document.body;
+      const clone = contentRoot.cloneNode(true);
       clone.querySelectorAll('input, select, textarea').forEach(el => el.remove());
       clone.querySelectorAll('[data-testid*="similar" i], [id*="similar" i]').forEach(el => el.remove());
       const bodyText = clone.innerText || clone.textContent || '';
